@@ -1,0 +1,33 @@
+{
+    "name": "Symphony Cms Installer",
+    "description": "Installer package for Symphony CMS",
+    "homepage": "http://www.getsymphony.com",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Symphony Team",
+            "email": "team@getsymphony.com",
+            "homepage": "http://www.getsymphony.com"
+        },
+        {
+            "name": "John Porter",
+            "email": "john@designermonkey.co.uk",
+            "homepage": "http://designermonkey.co.uk"
+        }
+    ],
+    "require-dev": {
+        "php": ">=5.3.3"
+    },
+    "require": {
+        "php": ">=5.3.3"
+    },
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-0": {
+            "SymphonyCms\\": "symphony/lib/",
+            "SymphonyCms\\Extensions\\": "extensions/",
+            "SymphonyCms\\Datasources\\": "workspace/datasources/",
+            "SymphonyCms\\Events\\": "workspace/events/"
+        }
+    }
+}
