@@ -2,6 +2,7 @@
 
 namespace SymphonyCms\Pages\Content;
 
+use \SymphonyCms\Symphony;
 use \SymphonyCms\Symphony\Administration;
 use \SymphonyCms\Pages\AdministrationPage;
 use \SymphonyCms\Toolkit\Alert;

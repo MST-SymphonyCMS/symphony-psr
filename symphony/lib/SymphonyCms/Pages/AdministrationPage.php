@@ -656,7 +656,7 @@ class AdministrationPage extends HTMLPage
             $context = $this->_context[0];
         }
 
-        $function = ($type == 'action' ? '__action' : '__view') . ucfirst($context);
+        $function = ($type == 'action' ? 'action' : 'view') . ucfirst($context);
 
         if (!method_exists($this, $function)) {
             // If there is no action function, just return without doing anything
