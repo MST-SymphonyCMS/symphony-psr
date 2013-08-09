@@ -13,6 +13,7 @@ class LogoutPage extends HTMLPage
 {
     public function build()
     {
+        parent::build();
         $this->view();
     }
 

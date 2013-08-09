@@ -10,6 +10,7 @@ use \SymphonyCms\Cryptography\SHA1;
 use \SymphonyCms\Pages\HTMLPage;
 use \SymphonyCms\Toolkit\Email;
 use \SymphonyCms\Toolkit\Lang;
+use \SymphonyCms\Toolkit\Page;
 use \SymphonyCms\Toolkit\Widget;
 use \SymphonyCms\Toolkit\XMLElement;
 use \SymphonyCms\Utilities\General;
@@ -48,6 +49,7 @@ class LoginPage extends HTMLPage
 
     public function build($context = null)
     {
+        parent::build();
         if ($context) {
             $this->_context = $context;
         }
@@ -55,7 +57,6 @@ class LoginPage extends HTMLPage
         if (isset($_REQUEST['action'])) {
             $this->action();
         }
-
         $this->view();
     }
 

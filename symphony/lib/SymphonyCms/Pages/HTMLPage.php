@@ -104,7 +104,6 @@ class HTMLPage extends Page
      */
     public function generate($page = null)
     {
-        $this->build();
         parent::generate($page);
         return $this->Html->generate(true);
     }
