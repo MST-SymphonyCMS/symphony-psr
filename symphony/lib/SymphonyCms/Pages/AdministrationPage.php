@@ -1,6 +1,6 @@
 <?php
 
-namespace SymphonyCms\Toolkit;
+namespace SymphonyCms\Pages;
 
 use \Exception;
 use \SymphonyCms\Symphony;

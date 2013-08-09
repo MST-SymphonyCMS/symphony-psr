@@ -6,6 +6,7 @@ use \Exception;
 use \SymphonyCms\Symphony;
 use \SymphonyCms\Pages\AdministrationPage;
 use \SymphonyCms\Pages\Content\LoginPage;
+use \SymphonyCms\Toolkit\Alert;
 use \SymphonyCms\Toolkit\Page;
 use \SymphonyCms\Toolkit\Section;
 use \SymphonyCms\Toolkit\SectionManager;
@@ -173,7 +174,6 @@ class Administration extends Symphony
                 $this->errorPageNotFound();
             }
         }
-
         $this->Page = new $this->_callback['classname'];
 
         if (!$is_logged_in && $this->_callback['driver'] != 'login') {
@@ -394,7 +394,7 @@ class Administration extends Symphony
                 $callback['context'] = preg_split('/\//', $bits[2], -1, PREG_SPLIT_NO_EMPTY);
             }
 
-            $callback['classname'] = '\\SymphonyCms\\Extensions\\' . $callback['driver'];
+            $callback['classname'] = 'SymphonyCms\\Pages\\Content\\' . $callback['driver'] . 'Page';
             $callback['driver'] = strtolower($callback['driver']);
         }
 
@@ -451,7 +451,6 @@ class Administration extends Symphony
     {
         Symphony::Profiler()->sample('Page build process started');
         $this->buildPage($page);
-        //var_dump($this->Page);die;
 
         /**
          * Immediately before generating the admin page. Provided with the page object

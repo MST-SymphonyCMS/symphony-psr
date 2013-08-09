@@ -100,10 +100,17 @@ class HTMLPage extends Page
      * generate function which generates a HTML DOM from all the
      * XMLElement children.
      *
+     * @param string $page
+     * @param boolean $build
+     *  Whether to do the default build function which will generate the `<head>`
+     *  and attach the Head and Body XMLElement's to the Html XMLElement
      * @return string
      */
-    public function generate($page = null)
+    public function generate($page = null, $build = false)
     {
+        if($build) {
+            $this->build();
+        }
         parent::generate($page);
         return $this->Html->generate(true);
     }

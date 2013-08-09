@@ -272,6 +272,6 @@ foreach ($errors_grouped as $group => $data) {
 $div->appendChild($ul);
 $Page->Body->appendChild($div);
 
-print $Page->generate();
+print $Page->generate(null, true);
 
 exit;

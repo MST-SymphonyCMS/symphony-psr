@@ -36,7 +36,7 @@ if (isset($query)) {
 
 $Page->Body->appendChild($div);
 
-$output = $Page->generate();
+$output = $Page->generate(null, true);
 
 echo $output;
 
