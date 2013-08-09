@@ -13,8 +13,14 @@ use \SymphonyCms\Pages\FrontendPage;
  * @package SymphonyCms
  * @subpackage Symphony
  */
-class Frontend extends Symphony
+class Frontend implements SingletonInterface
 {
+    /**
+     * An instance of the Symphony class, either `Administration` or `Frontend`.
+     * @var Symphony
+     */
+    protected static $instance = null;
+
     /**
      * An instance of the FrontendPage class
      * @var FrontendPage
@@ -42,7 +48,7 @@ class Frontend extends Symphony
      *
      * @see core.Symphony#__construct()
      */
-    protected function __construct()
+    public function __construct()
     {
         parent::__construct();
 
