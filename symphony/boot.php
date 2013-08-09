@@ -9,8 +9,6 @@ if (PHP_VERSION_ID >= 50300) {
     error_reporting(E_ALL & ~E_NOTICE);
 }
 
-ini_set('magic_quotes_runtime', 0);
-
 if (!file_exists(CONFIG)) {
     $isInstaller = (bool)preg_match('%(/|\\\\)install(\.php)?$%', $_SERVER['SCRIPT_FILENAME']);
 
