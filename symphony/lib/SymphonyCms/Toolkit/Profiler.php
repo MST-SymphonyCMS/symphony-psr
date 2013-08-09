@@ -14,7 +14,7 @@ use \SymphonyCms\Interfaces\SingletonInterface;
  * Administration execution. The Profiler implements the Singleton interface.
  */
 
-class Profiler implements SingletonInterface
+class Profiler
 {
     /**
      * Holds the timestamp from when the profiler was first initialised
@@ -62,7 +62,7 @@ class Profiler implements SingletonInterface
     /**
      * The constructor for the profile function sets the start time
      */
-    protected function __construct()
+    public function __construct()
     {
         Profiler::$_starttime = precisionTimer();
     }
