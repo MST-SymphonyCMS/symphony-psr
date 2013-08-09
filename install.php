@@ -26,7 +26,7 @@ if (isset($_REQUEST['info'])) {
 }
 
 define('VERSION', '2.3.3');
-define('INSTALL_URL', URL . '/install');
+define('INSTALL_URL', URL . '/install.php');
 
 // If prompt to remove, delete the entire `/install` directory
 // and then redirect to Symphony
