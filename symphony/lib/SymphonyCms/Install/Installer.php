@@ -33,7 +33,7 @@ class Installer extends Administration
      * and Database objects for installation/update. This allows us to use the
      * normal accessors.
      */
-    protected function __construct()
+    public function __construct()
     {
         if (get_magic_quotes_gpc()) {
             General::cleanArray($_SERVER);
