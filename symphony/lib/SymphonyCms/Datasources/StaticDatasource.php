@@ -1,6 +1,6 @@
 <?php
 
-namespace \SymphonyCms\Datasources;
+namespace SymphonyCms\Datasources;
 
 use \SymphonyCms\Toolkit\Datasource;
 use \SymphonyCms\Toolkit\XMLElement;

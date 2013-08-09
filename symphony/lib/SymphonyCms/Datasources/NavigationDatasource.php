@@ -1,6 +1,6 @@
 <?php
 
-namespace \SymphonyCms\Datasources;
+namespace SymphonyCms\Datasources;
 
 use \SymphonyCms\Symphony;
 use \SymphonyCms\Exceptions\FrontendPageNotFoundException;

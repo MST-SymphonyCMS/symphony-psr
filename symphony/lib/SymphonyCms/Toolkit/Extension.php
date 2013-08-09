@@ -1,6 +1,6 @@
 <?php
 
-namespace \SymphonyCms\Extensions;
+namespace SymphonyCms\Extensions;
 
 /**
  * The abstract Extension class contains common methods that most

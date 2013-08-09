@@ -1,6 +1,6 @@
 <?php
 
-namespace \SymphonyCms\Toolkit;
+namespace SymphonyCms\Toolkit;
 
 use \SymphonyCms\Symphony;
 use \SymphonyCms\Toolkit\Author;
@@ -8,7 +8,7 @@ use \SymphonyCms\Toolkit\Author;
 /**
  * The `AuthorManager` class is responsible for managing all Author objects
  * in Symphony. Unlike other Manager objects, Authors are stored in the
- * database in `tblauthors` and not on the file system. CRUD methods are
+ * database in `tbl_authors` and not on the file system. CRUD methods are
  * implemented to allow Authors to be created (add), read (fetch), updated
  * (edit) and deleted (delete).
  */
@@ -33,7 +33,7 @@ class AuthorManager
      */
     public static function add(array $fields)
     {
-        if (!Symphony::Database()->insert($fields, 'tblauthors')) {
+        if (!Symphony::Database()->insert($fields, 'tbl_authors')) {
             return false;
         }
 
@@ -44,7 +44,7 @@ class AuthorManager
 
     /**
      * Given an Author ID and associative array of fields, update an existing Author
-     * row in the `tblauthors` database table. Returns boolean for success/failure
+     * row in the `tbl_authors` database table. Returns boolean for success/failure
      *
      * @param integer $id
      *  The ID of the Author that should be updated
@@ -58,7 +58,7 @@ class AuthorManager
     {
         return Symphony::Database()->update(
             $fields,
-            'tblauthors',
+            'tbl_authors',
             sprintf(
                 " `id` = %d",
                 $id
@@ -76,7 +76,7 @@ class AuthorManager
     public static function delete($id)
     {
         return Symphony::Database()->delete(
-            'tblauthors',
+            'tbl_authors',
             sprintf(
                 " `id` = %d",
                 $id
@@ -98,7 +98,7 @@ class AuthorManager
      * @param integer $start
      *  The offset start point for limiting, maps to the LIMIT {x}, {y} MySQL functionality
      * @param string $where
-     *  Any custom WHERE clauses. The `tblauthors` alias is `a`
+     *  Any custom WHERE clauses. The `tbl_authors` alias is `a`
      * @param string $joins
      *  Any custom JOIN's
      * @return array
@@ -112,7 +112,7 @@ class AuthorManager
         $records = Symphony::Database()->fetch(
             sprintf(
                 "SELECT a.*
-                FROM `tblauthors` AS `a`
+                FROM `tbl_authors` AS `a`
                 %s
                 WHERE %s
                 ORDER BY %s %s
@@ -149,7 +149,7 @@ class AuthorManager
     /**
      * Returns Author's that match the provided ID's with the option to
      * sort or limit the output. This function will search the
-     * `AuthorManager::$_pool` for Authors first before querying `tblauthors`
+     * `AuthorManager::$_pool` for Authors first before querying `tbl_authors`
      *
      * @param integer|array $id
      *  A single ID or an array of ID's
@@ -196,7 +196,7 @@ class AuthorManager
         $records = Symphony::Database()->fetch(
             sprintf(
                 "SELECT *
-                FROM `tblauthors`
+                FROM `tbl_authors`
                 WHERE `id` IN (%s)",
                 implode(",", $id)
             )
@@ -222,7 +222,7 @@ class AuthorManager
 
     /**
      * Returns an Author by Username. This function will search the
-     * `AuthorManager::$_pool` for Authors first before querying `tblauthors`
+     * `AuthorManager::$_pool` for Authors first before querying `tbl_authors`
      *
      * @param string $username
      *  The Author's username
@@ -236,7 +236,7 @@ class AuthorManager
                 0,
                 sprintf(
                     "SELECT *
-                    FROM `tblauthors`
+                    FROM `tbl_authors`
                     WHERE `username` = '%s'
                     LIMIT 1",
                     Symphony::Database()->cleanValue($username)
@@ -275,7 +275,7 @@ class AuthorManager
 
         return Symphony::Database()->query(
             sprintf(
-                "UPDATE `tblauthors`
+                "UPDATE `tbl_authors`
                 SET `auth_token_active` = 'yes'
                 WHERE `id` = %d",
                 $author_id
@@ -299,7 +299,7 @@ class AuthorManager
 
         return Symphony::Database()->query(
             sprintf(
-                "UPDATE `tblauthors`
+                "UPDATE `tbl_authors`
                 SET `auth_token_active` = 'no'
                 WHERE `id` = %d",
                 $author_id

@@ -1,6 +1,6 @@
 <?php
 
-namespace \SymphonyCms\Toolkit;
+namespace SymphonyCms\Toolkit;
 
 use \SymphonyCms\Exceptions\FrontendPageNotFoundException;
 use \SymphonyCms\Exceptions\FrontendPageNotFoundExceptionHandler;
