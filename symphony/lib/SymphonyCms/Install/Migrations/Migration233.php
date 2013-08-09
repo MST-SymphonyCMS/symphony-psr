@@ -50,7 +50,7 @@ class Migration233 extends Migration
             // Update DB for the new author role #1692
             Symphony::Database()->query(
                 sprintf(
-                    "ALTER TABLE `tblauthors` CHANGE `user_type` `user_type` enum('author', 'manager', 'developer') DEFAULT 'author'",
+                    "ALTER TABLE `tbl_authors` CHANGE `user_type` `user_type` enum('author', 'manager', 'developer') DEFAULT 'author'",
                     $field
                 )
             );

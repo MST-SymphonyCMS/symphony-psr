@@ -450,10 +450,10 @@ abstract class Symphony implements SingletonInterface
             if (!empty($author) && Cryptography::compare($password, current($author)->get('password'), $isHash)) {
                 $this->Author = current($author);
 
-                // Only migrate hashes if there is no update available as the update might change the tblauthors table.
+                // Only migrate hashes if there is no update available as the update might change the tbl_authors table.
                 if ($this->isUpgradeAvailable() === false && Cryptography::requiresMigration($this->Author->get('password'))) {
                     $this->Author->set('password', Cryptography::hash($password));
-                    self::Database()->update(array('password' => $this->Author->get('password')), 'tblauthors', " `id` = '" . $this->Author->get('id') . "'");
+                    self::Database()->update(array('password' => $this->Author->get('password')), 'tbl_authors', " `id` = '" . $this->Author->get('id') . "'");
                 }
 
                 $this->Cookie->set('username', $username);
@@ -462,7 +462,7 @@ abstract class Symphony implements SingletonInterface
                     array(
                         'last_seen' => DateTimeObj::get('Y-m-d H:i:s')
                     ),
-                    'tblauthors',
+                    'tbl_authors',
                     sprintf(" `id` = %d", $this->Author->get('id'))
                 );
 
@@ -500,7 +500,7 @@ abstract class Symphony implements SingletonInterface
                 0,
                 sprintf(
                     "SELECT `a`.`id`, `a`.`username`, `a`.`password`
-                    FROM `tblauthors` AS `a`, `tbl_forgotpass` AS `f`
+                    FROM `tbl_authors` AS `a`, `tbl_forgotpass` AS `f`
                     WHERE `a`.`id` = `f`.`author_id`
                     AND `f`.`expiry` > '%s'
                     AND `f`.`token` = '%s'
@@ -516,7 +516,7 @@ abstract class Symphony implements SingletonInterface
                 0,
                 sprintf(
                     "SELECT `id`, `username`, `password`
-                    FROM `tblauthors`
+                    FROM `tbl_authors`
                     WHERE SUBSTR(%s(CONCAT(`username`, `password`)), 1, 8) = '%s'
                     AND `auth_token_active` = 'yes'
                     LIMIT 1",
@@ -530,7 +530,7 @@ abstract class Symphony implements SingletonInterface
             $this->Author = AuthorManager::fetchByID($row['id']);
             $this->Cookie->set('username', $row['username']);
             $this->Cookie->set('pass', $row['password']);
-            self::Database()->update(array('last_seen' => DateTimeObj::getGMT('Y-m-d H:i:s')), 'tblauthors', " `id` = '{$row['id']}'");
+            self::Database()->update(array('last_seen' => DateTimeObj::getGMT('Y-m-d H:i:s')), 'tbl_authors', " `id` = '{$row['id']}'");
 
             return true;
         }
@@ -584,7 +584,7 @@ abstract class Symphony implements SingletonInterface
                     $this->Author = current($author);
                     self::Database()->update(
                         array('last_seen' => DateTimeObj::get('Y-m-d H:i:s')),
-                        'tblauthors',
+                        'tbl_authors',
                         sprintf(" `id` = %d", $this->Author->get('id'))
                     );
 
@@ -615,9 +615,11 @@ abstract class Symphony implements SingletonInterface
         if ($this->isInstallerAvailable()) {
             $migrations = new DirectoryIterator(__DIR__.'/Install/Migrations');
             $migration_file = end($migrations);
+            $migration_class = 'SymphonyCms\\Install\\Migrations\\' . $migration_file;
 
-            $migration_class = '\\SymphonyCms\\Install\\Migrations\\' . $migration_file;
-            return call_user_func(array($migration_class, 'getVersion'));
+            if(class_exists($migration_class)) {
+                return call_user_func(array($migration_class, 'getVersion'));
+            }
         } else {
             return false;
         }

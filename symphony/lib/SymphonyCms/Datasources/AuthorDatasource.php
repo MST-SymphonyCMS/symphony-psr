@@ -26,7 +26,7 @@ class AuthorDatasource extends Datasource
             $bits = $filter;
         }
 
-        $authors = Symphony::Database()->fetchCol('id', "SELECT `id` FROM `tblauthors` WHERE `".$field."` IN ('".implode("', '", $bits)."')");
+        $authors = Symphony::Database()->fetchCol('id', "SELECT `id` FROM `tbl_authors` WHERE `".$field."` IN ('".implode("', '", $bits)."')");
 
         return (is_array($authors) && !empty($authors) ? $authors : null);
     }

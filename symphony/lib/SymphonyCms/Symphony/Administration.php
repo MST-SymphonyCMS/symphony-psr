@@ -7,8 +7,8 @@ use \SymphonyCms\Symphony;
 use \SymphonyCms\Pages\AdministrationPage;
 use \SymphonyCms\Pages\Content\LoginPage;
 use \SymphonyCms\Toolkit\Page;
-use \SymphonyCms\Toolkit\Managers\Section;
-use \SymphonyCms\Toolkit\Managers\SectionManager;
+use \SymphonyCms\Toolkit\Section;
+use \SymphonyCms\Toolkit\SectionManager;
 
 /**
  * The Administration class is an instance of Symphony that controls

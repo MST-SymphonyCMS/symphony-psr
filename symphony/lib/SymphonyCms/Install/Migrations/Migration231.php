@@ -106,7 +106,7 @@ class Migration231 extends Migration
             }
 
             // Increase length of password field to accomodate longer hashes
-            Symphony::Database()->query("ALTER TABLE `tblauthors` CHANGE `password` `password` VARCHAR( 150 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT null");
+            Symphony::Database()->query("ALTER TABLE `tbl_authors` CHANGE `password` `password` VARCHAR( 150 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT null");
         }
 
         // Update the version information

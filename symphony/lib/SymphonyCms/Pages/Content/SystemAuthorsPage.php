@@ -546,7 +546,7 @@ class SystemAuthorsPage extends AdministrationPage
         /**
         * Allows the injection of custom form fields given the current `$this->Form`
         * object. Please note that this custom data should be saved in own extension
-        * tables and that modifying `tblauthors` to house your data is highly discouraged.
+        * tables and that modifying `tbl_authors` to house your data is highly discouraged.
         *
         * @delegate AddElementstoAuthorForm
         * @since Symphony 2.2

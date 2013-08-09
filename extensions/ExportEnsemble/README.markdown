@@ -42,7 +42,7 @@ Click on the `Download ZIP` button to export an ensemble as a ZIP archive. All t
 
 #### Excluded Database Tables
 
-- `tblauthors`
+- `tbl_authors`
 - `tbl_cache`
 - `tbl_forgotpass`
 - `tbl_sessions`

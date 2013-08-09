@@ -16,7 +16,7 @@ class Author
 {
     /**
      * An associative array of information relating to this author where
-     * the keys map directly to the `tblauthors` columns.
+     * the keys map directly to the `tbl_authors` columns.
      * @var array
      */
     private $_fields = array();
@@ -32,7 +32,7 @@ class Author
      * Stores a key=>value pair into the Author object's `$this->_fields` array.
      *
      * @param string $field
-     *  Maps directly to a column in the `tblauthors` table.
+     *  Maps directly to a column in the `tbl_authors` table.
      * @param string $value
      *  The value for the given $field
      */
@@ -46,7 +46,7 @@ class Author
      * array. If field is omitted, all fields are returned.
      *
      * @param string $field
-     *  Maps directly to a column in the `tblauthors` table. Defaults to null
+     *  Maps directly to a column in the `tbl_authors` table. Defaults to null
      * @return mixed
      *  If the field is not set or is empty, returns null.
      *  If the field is not provided, returns the `$this->_fields` array
@@ -70,7 +70,7 @@ class Author
      *
      * @since Symphony 2.2.1
      * @param string $field
-     *  Maps directly to a column in the `tblauthors` table. Defaults to null
+     *  Maps directly to a column in the `tbl_authors` table. Defaults to null
      */
     public function remove($field = null)
     {
@@ -179,7 +179,7 @@ class Author
                 0,
                 sprintf(
                     "SELECT `email`, `username`
-                    FROM `tblauthors`
+                    FROM `tbl_authors`
                     WHERE `id` = %d",
                     $this->get('id')
                 )
@@ -201,7 +201,7 @@ class Author
                     0,
                     sprintf(
                         "SELECT COUNT(`id`) as `count`
-                        FROM `tblauthors`
+                        FROM `tbl_authors`
                         WHERE `email` = '%s'",
                         General::sanitize($this->get('email'))
                     )
@@ -214,7 +214,7 @@ class Author
             0,
             sprintf(
                 "SELECT `id`
-                FROM `tblauthors`
+                FROM `tbl_authors`
                 WHERE `email` = '%s'
                 LIMIT 1",
                 General::sanitize($this->get('email'))
@@ -236,7 +236,7 @@ class Author
                     0,
                     sprintf(
                         "SELECT COUNT(`id`) as `count`
-                        FROM `tblauthors`
+                        FROM `tbl_authors`
                         WHERE `username` = '%s'",
                         General::sanitize($this->get('username'))
                     )
@@ -249,7 +249,7 @@ class Author
             0,
             sprintf(
                 "SELECT `id`
-                FROM `tblauthors`
+                FROM `tbl_authors`
                 WHERE `username` = '%s'
                 LIMIT 1",
                 General::sanitize($this->get('username'))

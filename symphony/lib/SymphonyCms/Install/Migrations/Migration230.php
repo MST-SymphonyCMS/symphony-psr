@@ -138,7 +138,7 @@ class Migration230 extends Migration
 
             // Add uniqueness constraint for the Authors table. #937
             try {
-                Symphony::Database()->query("ALTER TABLE `tblauthors` ADD UNIQUE KEY `email` (`email`)");
+                Symphony::Database()->query("ALTER TABLE `tbl_authors` ADD UNIQUE KEY `email` (`email`)");
             } catch (DatabaseException $ex) {
                 // 1061 will be 'duplicate key', which is fine (means key was added earlier)
                 // 1062 means the key failed to apply, which is bad.

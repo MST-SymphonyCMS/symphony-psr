@@ -59,10 +59,10 @@ class Migration220 extends Migration
                 Symphony::Database()->query('ALTER TABLE `tbl_fields_select` ADD `show_association` ENUM( "yes", "no" ) COLLATE utf8_unicode_ci NOT null DEFAULT "yes"');
             }
 
-            if (Symphony::Database()->tableContainsField('tblauthors', 'default_section')) {
+            if (Symphony::Database()->tableContainsField('tbl_authors', 'default_section')) {
                 // Allow Authors to be set to any area in the backend.
                 Symphony::Database()->query(
-                    'ALTER TABLE `tblauthors` CHANGE `default_section` `default_area` VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT null;'
+                    'ALTER TABLE `tbl_authors` CHANGE `default_section` `default_area` VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT null;'
                 );
             }
 

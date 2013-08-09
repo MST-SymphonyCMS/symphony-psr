@@ -476,7 +476,7 @@ class FieldAuthor extends Field implements ExportableFieldInterface
                     `tbl_entries_data_{$field_id}` AS t{$field_id}_{$this->_key}
                     ON (e.id = t{$field_id}_{$this->_key}.entry_id)
                 JOIN
-                    `tblauthors` AS t{$field_id}_{$this->_key}authors
+                    `tbl_authors` AS t{$field_id}_{$this->_key}authors
                     ON (t{$field_id}_{$this->_key}.author_id = t{$field_id}_{$this->_key}authors.id)
             ";
 
@@ -508,7 +508,7 @@ class FieldAuthor extends Field implements ExportableFieldInterface
                             `tbl_entries_data_{$field_id}` AS t{$field_id}_{$this->_key}
                             ON (e.id = t{$field_id}_{$this->_key}.entry_id)
                         JOIN
-                            `tblauthors` AS t{$field_id}_{$this->_key}authors
+                            `tbl_authors` AS t{$field_id}_{$this->_key}authors
                             ON (t{$field_id}_{$this->_key}.author_id = t{$field_id}_{$this->_key}authors.id)
                     ";
 
@@ -535,7 +535,7 @@ class FieldAuthor extends Field implements ExportableFieldInterface
                     `tbl_entries_data_{$field_id}` AS t{$field_id}_{$this->_key}
                     ON (e.id = t{$field_id}_{$this->_key}.entry_id)
                 JOIN
-                    `tblauthors` AS t{$field_id}_{$this->_key}authors
+                    `tbl_authors` AS t{$field_id}_{$this->_key}authors
                     ON (t{$field_id}_{$this->_key}.author_id = t{$field_id}_{$this->_key}authors.id)
             ";
 
@@ -562,7 +562,7 @@ class FieldAuthor extends Field implements ExportableFieldInterface
         } else {
             $joins .= "
                 LEFT OUTER JOIN `tbl_entries_data_".$this->get('id')."` AS `ed` ON (`e`.`id` = `ed`.`entry_id`)
-                JOIN `tblauthors` AS `a` ON (ed.author_id = a.id)
+                JOIN `tbl_authors` AS `a` ON (ed.author_id = a.id)
             ";
             $sort = "ORDER BY `a`.`first_name` " . $order . ", `a`.`last_name` " . $order;
         }

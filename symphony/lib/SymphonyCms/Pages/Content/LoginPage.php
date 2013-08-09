@@ -228,7 +228,7 @@ class LoginPage extends HTMLPage
 
                 $author = Symphony::Database()->fetchRow(0, sprintf("
                         SELECT `id`, `email`, `first_name`
-                        FROM `tblauthors`
+                        FROM `tbl_authors`
                         WHERE `email` = '%1\$s' OR `username` = '%1\$s'
                     ", Symphony::Database()->cleanValue($_POST['email'])
                 ));

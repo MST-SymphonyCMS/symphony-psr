@@ -187,7 +187,7 @@
 		private function __getDataTables($data_tables){
 			// Create array of tables to ignore for data-only dump
 			$ignore_tables = array(
-				'tblauthors',
+				'tbl_authors',
 				'tbl_cache',
 				'tbl_entries_',
 				'tbl_fields_',
