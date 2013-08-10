@@ -430,7 +430,6 @@ class AdministrationPage extends HTMLPage
          *  '/backend/'
          */
         Symphony::ExtensionManager()->notifyMembers('InitialiseAdminPageHead', '/backend/');
-        Symphony::ExtensionManager()->notifyMembers('InitaliseAdminPageHead', '/backend/');
 
         $this->addHeaderToPage('Content-Type', 'text/html; charset=UTF-8');
         $this->addHeaderToPage('Cache-Control', 'no-cache, must-revalidate, max-age=0');
@@ -458,6 +457,8 @@ class AdministrationPage extends HTMLPage
         $this->view();
 
         $this->appendAlert();
+
+        parent::build();
 
         Symphony::Profiler()->sample('Page content created', PROFILE_LAP);
     }
@@ -690,21 +691,6 @@ class AdministrationPage extends HTMLPage
          *  '/backend/'
          */
         Symphony::ExtensionManager()->notifyMembers('AppendPageAlert', '/backend/');
-
-        // Errors first, success next, then notices.
-        function sortAlerts($a, $b) {
-            if ($a->{'type'} == $b->{'type'}) {
-                return 0;
-            }
-
-            if (($a->{'type'} == Alert::ERROR && $a->{'type'} != $b->{'type'})
-                || ($a->{'type'} == Alert::SUCCESS && $b->{'type'} == Alert::NOTICE)
-            ) {
-                return -1;
-            }
-
-            return 1;
-        }
 
         if (!is_array($this->Alert) || empty($this->Alert)) {
             return;

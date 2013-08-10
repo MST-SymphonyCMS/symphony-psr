@@ -44,8 +44,7 @@ class FieldManager implements FileResourceInterface
     }
 
     /**
-     * Given a type, returns the full class name of a Field. Fields use a
-     * 'field' prefix
+     * Given a type, returns the full class name of a Field.
      *
      * @param string $type
      *  A field handle
@@ -513,13 +512,13 @@ class FieldManager implements FileResourceInterface
      */
     public static function listAll()
     {
-        $structure = General::listStructure(TOOLKIT . '/fields', '/field.[a-z0-9_-]+.php/i', false, 'asc', TOOLKIT . '/fields');
+        $structure = General::listStructure(__DIR__ . '/../Fields', '/Field[A-Z][a-z0-9_-]+.php/i', false, 'asc', __DIR__ . '/../Fields');
 
         $extensions = Symphony::ExtensionManager()->listInstalledHandles();
 
         if (is_array($extensions) && !empty($extensions)) {
             foreach ($extensions as $handle) {
-                if (is_dir(EXTENSIONS . '/' . $handle . '/fields')) {
+                if (is_dir(EXTENSIONS . '/' . $handle . '/Fields')) {
                     $tmp = General::listStructure(EXTENSIONS . '/' . $handle . '/fields', '/field.[a-z0-9_-]+.php/i', false, 'asc', EXTENSIONS . '/' . $handle . '/fields');
                     if (is_array($tmp['filelist']) && !empty($tmp['filelist'])) {
                         $structure['filelist'] = array_merge($structure['filelist'], $tmp['filelist']);

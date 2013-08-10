@@ -46,6 +46,9 @@ class ResourceManager
      */
     public static function getManagerFromType($type)
     {
+        // This is a hack as some pages pass the constant through as a string
+        $type = (is_string($type) ? constant($type) : $type);
+
         switch ($type) {
             case RESOURCE_TYPE_EVENT:
                 return 'EventManager';
@@ -155,7 +158,7 @@ class ResourceManager
             throw new Exception(tr('Unable to find a Manager class for this resource.'));
         }
 
-        $resources = call_user_func(array($manager, 'listAll'));
+        $resources = call_user_func(array('\\SymphonyCms\\Toolkit\\'.$manager, 'listAll'));
 
         foreach ($resources as &$r) {
             // If source is numeric, it's considered to be a Symphony Section

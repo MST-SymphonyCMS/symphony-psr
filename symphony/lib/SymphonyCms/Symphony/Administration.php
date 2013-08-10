@@ -336,12 +336,12 @@ class Administration extends Symphony
             $bits = preg_split('/\//', trim($bits[2], '/'), 2, PREG_SPLIT_NO_EMPTY);
 
             $callback['driver'] = 'index';
-            $callback['classname'] = '\\SymphonyCms\\Extensions\\Extension' . ucfirst($extension_name) . 'Index';
+            $callback['classname'] = '\\SymphonyCms\\Extensions\\Extension' . ucfirst($extension_name) . '\\Content\\' . 'IndexPage';
             $callback['pageroot'] = '/extension/' . $extension_name. '/';
 
             if (isset($bits[0])) {
                 $callback['driver'] = $bits[0];
-                $callback['classname'] = '\\SymphonyCms\\Extensions\\Extension' . ucfirst($extension_name) . ucfirst($bits[0]);
+                $callback['classname'] = '\\SymphonyCms\\Extensions\\Extension' . ucfirst($extension_name) . '\\Content\\' . ucfirst($bits[0]) . 'Page';
                 $callback['pageroot'] .= $bits[0] . '/';
             }
 
@@ -363,7 +363,7 @@ class Administration extends Symphony
                     'flag' => null
                 ),
                 'pageroot' => '/' . $bits[0] . '/' . $bits[1] . '/',
-                'classname' => 'contentPublish'
+                'classname' => '\\SymphonyCms\\Pages\\Content\\PublishPage'
             );
 
             if (isset($bits[2])) {

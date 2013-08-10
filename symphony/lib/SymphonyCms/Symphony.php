@@ -184,8 +184,7 @@ abstract class Symphony implements SingletonInterface
         if (empty($data)) {
             // Includes the existing CONFIG file and initialises the Configuration
             // by setting the values with the setArray function.
-            include(CONFIG);
-            $data = $settings;
+            $data = include CONFIG;
         }
 
         self::$Configuration = new Configuration(true);
@@ -261,11 +260,6 @@ abstract class Symphony implements SingletonInterface
      *
      * This function also defines two constants, `__SYM_COOKIE_PATH__`
      * and `__SYM_COOKIE_PREFIX__`.
-     *
-     * @deprecated Prior to Symphony 2.3.2, the constant `__SYM_COOKIE_PREFIX_`
-     *  had a typo where it was missing the second underscore. Symphony will
-     *  support both constants, `__SYM_COOKIE_PREFIX_` and `__SYM_COOKIE_PREFIX__`
-     *  until Symphony 2.5
      */
     public function initialiseCookie()
     {
@@ -273,7 +267,6 @@ abstract class Symphony implements SingletonInterface
         $cookie_path = '/' . trim($cookie_path, '/');
 
         defineSafe('__SYM_COOKIE_PATH__', $cookie_path);
-        defineSafe('__SYM_COOKIE_PREFIX_', self::Configuration()->get('cookie_prefix', 'symphony'));
         defineSafe('__SYM_COOKIE_PREFIX__', self::Configuration()->get('cookie_prefix', 'symphony'));
 
         $this->Cookie = new Cookie(__SYM_COOKIE_PREFIX__, TWO_WEEKS, __SYM_COOKIE_PATH__);

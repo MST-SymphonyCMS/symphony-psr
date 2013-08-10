@@ -207,6 +207,22 @@ function cleanupSessionCookies()
     }
 }
 
+// Errors first, success next, then notices.
+function sortAlerts($a, $b) {
+    if ($a->{'type'} == $b->{'type'}) {
+        return 0;
+    }
+
+    if (($a->{'type'} == \SymphonyCms\Toolkit\Alert::ERROR && $a->{'type'} != $b->{'type'})
+        || ($a->{'type'} == \SymphonyCms\Toolkit\Alert::SUCCESS && $b->{'type'} == \SymphonyCms\Toolkit\Alert::NOTICE)
+    ) {
+        return -1;
+    }
+
+    return 1;
+}
+
+
 /**
  * The translation function accepts an English string and returns its translation
  * to the active system language. If the given string is not available in the
