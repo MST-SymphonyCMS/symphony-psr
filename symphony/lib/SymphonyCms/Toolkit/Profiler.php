@@ -2,8 +2,6 @@
 
 namespace SymphonyCms\Toolkit;
 
-use \SymphonyCms\Interfaces\SingletonInterface;
-
 /**
  * @package toolkit
  */
@@ -14,7 +12,7 @@ use \SymphonyCms\Interfaces\SingletonInterface;
  * Administration execution. The Profiler implements the Singleton interface.
  */
 
-class Profiler implements SingletonInterface
+class Profiler
 {
     /**
      * Holds the timestamp from when the profiler was first initialised
@@ -40,25 +38,6 @@ class Profiler implements SingletonInterface
      */
     protected static $_seed = null;
 
-    /**
-     * An instance of the Profiler class
-     * @var Profiler
-     */
-    protected static $instance = null;
-
-    /**
-     * Returns the Profiler instance, creating one if it does not exist
-     *
-     * @return Profiler
-     */
-    public static function instance()
-    {
-        if (!(Profiler::$instance instanceof Profiler)) {
-            Profiler::$instance = new self;
-        }
-
-        return Profiler::$instance;
-    }
     /**
      * The constructor for the profile function sets the start time
      */
