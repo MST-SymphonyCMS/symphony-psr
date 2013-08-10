@@ -118,7 +118,7 @@ class GenericExceptionHandler
                     header('Content-Type: text/html; charset=utf-8');
                 }
 
-                $output = call_user_func(array('GenericExceptionHandler', 'render'), $e);
+                $output = call_user_func(array('\\SymphonyCms\\Exceptions\\GenericExceptionHandler', 'render'), $e);
 
                 echo $output;
                 exit;

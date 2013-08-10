@@ -41,7 +41,7 @@ class Profiler
     /**
      * The constructor for the profile function sets the start time
      */
-    protected function __construct()
+    public function __construct()
     {
         Profiler::$_starttime = precisionTimer();
     }

@@ -3,3 +3,6 @@ workspace/
 manifest/
 install-log.txt
 install/logs/
+
+/composer.lock
+/vendor/

@@ -4,6 +4,7 @@ namespace SymphonyCms\Symphony;
 
 use \Exception;
 use \SymphonyCms\Symphony;
+use \SymphonyCms\Interfaces\SingletonInterface;
 use \SymphonyCms\Pages\AdministrationPage;
 use \SymphonyCms\Pages\Content\LoginPage;
 use \SymphonyCms\Toolkit\Alert;
@@ -20,8 +21,14 @@ use \SymphonyCms\Toolkit\SectionManager;
  * @package SymphonyCms
  * @subpackage Symphony
  */
-class Administration extends Symphony
+class Administration implements SingletonInterface
 {
+    /**
+     * An instance of the Symphony class, either `Administration` or `Frontend`.
+     * @var Symphony
+     */
+    protected static $instance = null;
+
     /**
      * The path of the current page, ie. '/blueprints/sections/'
      * @var string
