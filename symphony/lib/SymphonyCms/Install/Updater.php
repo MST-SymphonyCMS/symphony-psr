@@ -82,7 +82,7 @@ class Updater extends Installer
                 $details['db']
             );
         } catch (DatabaseException $e) {
-            self::__abort(
+            self::abort(
                 'There was a problem while trying to establish a connection to the MySQL server. Please check your settings.',
                 $start
             );
@@ -98,7 +98,7 @@ class Updater extends Installer
     {
         // Initialize log
         if (is_null(Symphony::Log()) || !file_exists(Symphony::Log()->getLogPath())) {
-            self::__render(new UpdaterPage('missing-log'));
+            self::render(new UpdaterPage('missing-log'));
         }
 
         // Get available migrations. This will only contain the migrations
@@ -152,7 +152,7 @@ class Updater extends Installer
 
             // Show the update ready page, which will display the
             // version and release notes of the most recent migration
-            self::__render(
+            self::render(
                 new UpdaterPage(
                     'ready',
                     array(
@@ -189,9 +189,9 @@ class Updater extends Installer
             }
 
             if (!$canProceed) {
-                self::__render(new UpdaterPage('failure'));
+                self::render(new UpdaterPage('failure'));
             } else {
-                self::__render(
+                self::render(
                     new UpdaterPage(
                         'success',
                         array(
