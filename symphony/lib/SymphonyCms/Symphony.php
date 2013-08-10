@@ -8,6 +8,8 @@ use \DirectoryIterator;
 use \Exception;
 use \StdClass;
 
+use \Manneken\Container\Container;
+
 use \SymphonyCms\Exceptions\DatabaseException;
 use \SymphonyCms\Exceptions\GenericErrorHandler;
 use \SymphonyCms\Exceptions\GenericExceptionHandler;
@@ -34,51 +36,13 @@ use \SymphonyCms\Toolkit\Profiler;
 use \SymphonyCms\Utilities\General;
 
 /**
- * The Symphony class is an abstract class that implements the
- * Singleton interface. It provides the glue that forms the Symphony
- * CMS and initialises the toolkit classes. Symphony is extended by
- * the Frontend and Administration classes
+ * The Symphony class is an IoC container.
+ * It provides the glue that forms the Symphony CMS and initialises the toolkit classes.
  *
  * @package SymphonyCms
  */
-abstract class Symphony implements SingletonInterface
+class Symphony extends StaticContainer
 {
-    /**
-     * An instance of the Symphony class, either `Administration` or `Frontend`.
-     * @var Symphony
-     */
-    protected static $instance = null;
-
-    /**
-     * An instance of the `Configuration` class
-     * @var Configuration
-     */
-    private static $Configuration = null;
-
-    /**
-     * An instance of the `Database` class
-     * @var MySQL
-     */
-    private static $Database = null;
-
-    /**
-     * An instance of the `ExtensionManager` class
-     * @var ExtensionManager
-     */
-    private static $ExtensionManager = null;
-
-    /**
-     * An instance of the `Log` class
-     * @var Log
-     */
-    private static $Log = null;
-
-    /**
-     * An instance of the Profiler class
-     * @var Profiler
-     */
-    private static $Profiler = null;
-
     /**
      * The current page namespace, used for translations
      * @since Symphony 2.3
@@ -91,66 +55,271 @@ abstract class Symphony implements SingletonInterface
      * @since Symphony 2.3.2
      * @var Exception
      */
-    private $exception = null;
+    private static $exception = null;
 
     /**
-     * An instance of the Cookie class
-     * @var Cookie
-     */
-    public $Cookie = null;
-
-    /**
-     * An instance of the currently logged in Author
-     * @var Author
-     */
-    public $Author = null;
-
-    /**
-     * The Symphony constructor initialises the class variables of Symphony.
+     * The Symphony container initialises the class instances of Symphony.
      * It will set the DateTime settings, define new date constants and initialise
-     * the correct Language for the currently logged in Author. If magic quotes
-     * are enabled, Symphony will sanitize the `$_SERVER`, `$_COOKIE`,
-     * `$_GET` and `$_POST` arrays. The constructor loads in
+     * the correct Language for the currently logged in Author. The initialiser loads in
      * the initial Configuration values from the `CONFIG` file
      */
-    protected function __construct()
+    public static function initialise()
     {
-        self::$Profiler = Profiler::instance();
-        self::$Profiler->sample('Engine Initialisation');
+        $classes = include MANIFEST.'/config_classes.php';
 
-        if (get_magic_quotes_gpc()) {
-            General::cleanArray($_SERVER);
-            General::cleanArray($_COOKIE);
-            General::cleanArray($_GET);
-            General::cleanArray($_POST);
+        foreach ($classes as $key => $class) {
+            self::set($key, $class);
         }
 
-        $this->initialiseConfiguration();
+        self::initialiseProfiler();
+        self::initialiseConfiguration();
 
-        defineSafe('__SYM_DATE_FORMAT__', self::Configuration()->get('date_format', 'region'));
-        defineSafe('__SYM_TIME_FORMAT__', self::Configuration()->get('time_format', 'region'));
-        defineSafe('__SYM_DATETIME_FORMAT__', __SYM_DATE_FORMAT__ . self::Configuration()->get('datetime_separator', 'region') . __SYM_TIME_FORMAT__);
-        DateTimeObj::setSettings(self::Configuration()->get('region'));
+        DateTimeObj::setSettings(self::get('Configuration')->get('region'));
 
         // Initialize language management
         Lang::initialize();
 
-        $this->initialiseLog();
+        self::initialiseLog();
 
-        GenericExceptionHandler::initialise(self::Log());
-        GenericErrorHandler::initialise(self::Log());
+        GenericExceptionHandler::initialise(self::get('Log'));
+        GenericErrorHandler::initialise(self::get('Log'));
 
-        $this->initialiseDatabase();
-        $this->initialiseExtensionManager();
-        $this->initialiseCookie();
+        self::initialiseExtensionManager();
+        self::initialiseDatabase();
+        self::initialiseCookie();
 
         // If the user is not a logged in Author, turn off the verbose error messages.
-        if (!self::isLoggedIn() && is_null($this->Author)) {
+        if (!self::isLoggedIn() && !self::has('Author')) {
             GenericExceptionHandler::$enabled = false;
         }
 
         // Set system language
-        Lang::set(self::$Configuration->get('lang', 'symphony'));
+        Lang::set(self::get('Configuration')->get('lang', 'symphony'));
+    }
+
+    /**
+     * Initialise an instance of the `Profiler` into the Symphony container
+     * @return [type] [description]
+     */
+    public static function initialiseProfiler()
+    {
+        self::singleton(
+            'Profiler',
+            function ($con) {
+                $class = $con::get('profiler_class');
+                return new $class;
+            }
+        );
+
+        self::get('Profiler')->sample('Engine Initialisation');
+    }
+
+    /**
+     * Setter for `Configuration`. This function initialises the configuration object into the container, and populate its properties based on the given $array.
+     *
+     * @since Symphony 2.3
+     * @param array $data
+     *  An array of settings to be stored into the Configuration object
+     */
+    public static function initialiseConfiguration(array $data = array())
+    {
+        if (empty($data)) {
+            $data = include CONFIG;
+        }
+
+        self::singleton(
+            'Configuration',
+            function ($con) use ($data) {
+                $class = $con::get('configuration_class');
+
+                return new $class(true);
+
+                $class->setArray($data);
+            }
+        );
+    }
+
+    /**
+     * Sets defines that are based on `Configuration` values
+     */
+    public static function setDefines()
+    {
+        defineSafe('__SYM_DATE_FORMAT__', self::get('Configuration')->get('date_format', 'region'));
+        defineSafe('__SYM_TIME_FORMAT__', self::get('Configuration')->get('time_format', 'region'));
+        defineSafe('__SYM_DATETIME_FORMAT__', __SYM_DATE_FORMAT__ . self::get('Configuration')->get('datetime_separator', 'region') . __SYM_TIME_FORMAT__);
+    }
+
+    /**
+     * Setter for `Log`. This function uses the configuration settings in the 'log' group in the `Configuration` to create an instance in the container. Date formatting options are also retrieved from the configuration.
+     *
+     * @param string $filename (optional)
+     *  The file to write the log to, if omitted this will default to `ACTIVITY_LOG`
+     */
+    public static function initialiseLog($filename = null)
+    {
+        if (is_null($filename)) {
+            $filename = ACTIVITY_LOG;
+        }
+
+        if (!self::has('Log')) {
+            self::singleton(
+                'Log',
+                function ($con) use ($filename) {
+                    $class = $con::get('log_class');
+
+                    return new $class($filename);
+                }
+            );
+        }
+
+        $log = self::get('Log');
+        $config = self::get('Configuration');
+
+        $log->setArchive(($config->get('archive', 'log') == '1' ? true : false));
+        $log->setMaxSize(intval($config->get('maxsize', 'log')));
+        $log->setDateTimeFormat($config->get('date_format', 'region') . ' ' . $config->get('time_format', 'region'));
+
+        if ($log->open($log::APPEND, $config->get('write_mode', 'file')) == 1) {
+            $log->initialise('Symphony Log');
+        }
+    }
+
+    /**
+     * Setter for `ExtensionManager` This function adds an instance into the container. If for some reason this fails, a Symphony Error page will be thrown
+     */
+    public static function initialiseExtensionManager()
+    {
+        if (!self::has('ExtensionManager')) {
+            self::singleton(
+                'ExtensionManager',
+                function ($con) {
+                    $class = $con::get('extension_manager_class');
+
+                    return new $class;
+                }
+            );
+        }
+
+        if (!self::has('ExtensionManager')) {
+            self::throwCustomError(tr('Error creating Symphony extension manager.'));
+        }
+    }
+
+    /**
+     * This will initialise the Database class into the container, and attempt to create a connection using the connection details provided in the Symphony configuration. If any errors occur whilst doing so, a Symphony Error Page is displayed.
+     *
+     * @return boolean
+     *  This function will return true if the `$Database` was
+     *  initialised successfully.
+     */
+    public static function initialiseDatabase()
+    {
+        self::setDatabase();
+
+        $database = self::get('Database');
+        $configuration = self::get('Configuration');
+
+        $details = $configuration->get('database');
+
+        try {
+            if (!$database->connect($details['host'], $details['user'], $details['password'], $details['port'], $details['db'])) {
+                return false;
+            }
+
+            if (!$database->isConnected()) {
+                return false;
+            }
+
+            $database->setPrefix($details['tbl_prefix']);
+            $database->setCharacterEncoding();
+            $database->setCharacterSet();
+
+            // Set Timezone, need to convert human readable, ie. Australia/Brisbane to be +10:00
+            // @see https://github.com/symphonycms/symphony-2/issues/1726
+            $timezone = $configuration->get('timezone', 'region');
+            $symphony_date = new DateTime('now', new DateTimeZone($timezone));
+
+            // MySQL wants the offset to be in the format +/-H:I, getOffset returns offset in seconds
+            $utc = new DateTime('now ' . $symphony_date->getOffset() . ' seconds', new DateTimeZone("UTC"));
+
+            $offset = $symphony_date->diff($utc)->format('%R%H:%I');
+
+            $database->setTimeZone($offset);
+
+            if ($configuration->get('query_caching', 'database') == 'off') {
+                $database->disableCaching();
+            } elseif ($configuration->get('query_caching', 'database') == 'on') {
+                $database->enableCaching();
+            }
+        } catch (DatabaseException $e) {
+            $this->throwCustomError(
+                $e->getDatabaseErrorCode() . ': ' . $e->getDatabaseErrorMessage(),
+                tr('Symphony Database Error'),
+                Page::HTTP_STATUS_ERROR,
+                'database',
+                array(
+                    'error' => $e,
+                    'message' => tr('There was a problem whilst attempting to establish a database connection. Please check all connection information is correct.') . ' ' . tr('The following error was returned:')
+                )
+            );
+        }
+
+        return true;
+    }
+
+    /**
+     * Setter for `$Database`, accepts a Database object. If `$database`
+     * is omitted, this function will set `$Database` to be of the `MySQL`
+     * class.
+     *
+     * @since Symphony 2.3
+     * @param StdClass $database (optional)
+     *  The class to handle all Database operations, if omitted this function
+     *  will set `self::$Database` to be an instance of the `MySQL` class.
+     */
+    public static function setDatabase(StdClass $database = null)
+    {
+        if (self::has('Database')) {
+            self::singleton(
+                'Database',
+                function ($con) use ($database) {
+                    $class = (is_null($database) ? $con::get('database_class') : $database);
+
+                    return new $class;
+                }
+            );
+        }
+    }
+
+    /**
+     * Setter for `$Cookie`. This will use PHP's parse_url
+     * function on the current URL to set a cookie using the cookie_prefix
+     * defined in the Symphony configuration. The cookie will last two
+     * weeks.
+     *
+     * This function also defines two constants, `__SYM_COOKIE_PATH__`
+     * and `__SYM_COOKIE_PREFIX__`.
+     */
+    public static function initialiseCookie()
+    {
+        $configuration = self::get('Configuration');
+
+        $cookie_path = @parse_url(URL, PHP_URL_PATH);
+        $cookie_path = '/' . trim($cookie_path, '/');
+
+        defineSafe('__SYM_COOKIE_PATH__', $cookie_path);
+        defineSafe('__SYM_COOKIE_PREFIX__', $configuration->get('cookie_prefix', 'symphony'));
+
+        if (!self::has('Cookie')) {
+            self::singleton(
+                'Cookie',
+                function ($con) {
+                    $class = $con::get('cookie_class');
+
+                    return new $class(__SYM_COOKIE_PREFIX__, TWO_WEEKS, __SYM_COOKIE_PATH__);
+                }
+            );
+        }
     }
 
     /**
@@ -172,26 +341,6 @@ abstract class Symphony implements SingletonInterface
     }
 
     /**
-     * Setter for `$Configuration`. This function initialise the configuration
-     * object and populate its properties based on the given $array.
-     *
-     * @since Symphony 2.3
-     * @param array $data
-     *  An array of settings to be stored into the Configuration object
-     */
-    public function initialiseConfiguration(array $data = array())
-    {
-        if (empty($data)) {
-            // Includes the existing CONFIG file and initialises the Configuration
-            // by setting the values with the setArray function.
-            $data = include CONFIG;
-        }
-
-        self::$Configuration = new Configuration(true);
-        self::$Configuration->setArray($data);
-    }
-
-    /**
      * Accessor for the current `Configuration` instance. This contains
      * representation of the the Symphony config file.
      *
@@ -199,7 +348,7 @@ abstract class Symphony implements SingletonInterface
      */
     public static function Configuration()
     {
-        return self::$Configuration;
+        return self::get('Configuration');
     }
 
     /**
@@ -210,35 +359,7 @@ abstract class Symphony implements SingletonInterface
      */
     public static function Profiler()
     {
-        return self::$Profiler;
-    }
-
-    /**
-     * Setter for `$Log`. This function uses the configuration
-     * settings in the 'log' group in the Configuration to create an instance. Date
-     * formatting options are also retrieved from the configuration.
-     *
-     * @param string $filename (optional)
-     *  The file to write the log to, if omitted this will default to `ACTIVITY_LOG`
-     */
-    public function initialiseLog($filename = null)
-    {
-        if (self::$Log instanceof Log && self::$Log->getLogPath() == $filename) {
-            return true;
-        }
-
-        if (is_null($filename)) {
-            $filename = ACTIVITY_LOG;
-        }
-
-        self::$Log = new Log($filename);
-        self::$Log->setArchive((self::Configuration()->get('archive', 'log') == '1' ? true : false));
-        self::$Log->setMaxSize(intval(self::Configuration()->get('maxsize', 'log')));
-        self::$Log->setDateTimeFormat(self::Configuration()->get('date_format', 'region') . ' ' . self::Configuration()->get('time_format', 'region'));
-
-        if (self::$Log->open(Log::APPEND, self::Configuration()->get('write_mode', 'file')) == 1) {
-            self::$Log->initialise('Symphony Log');
-        }
+        return self::get('Profiler');
     }
 
     /**
@@ -249,45 +370,7 @@ abstract class Symphony implements SingletonInterface
      */
     public static function Log()
     {
-        return self::$Log;
-    }
-
-    /**
-     * Setter for `$Cookie`. This will use PHP's parse_url
-     * function on the current URL to set a cookie using the cookie_prefix
-     * defined in the Symphony configuration. The cookie will last two
-     * weeks.
-     *
-     * This function also defines two constants, `__SYM_COOKIE_PATH__`
-     * and `__SYM_COOKIE_PREFIX__`.
-     */
-    public function initialiseCookie()
-    {
-        $cookie_path = @parse_url(URL, PHP_URL_PATH);
-        $cookie_path = '/' . trim($cookie_path, '/');
-
-        defineSafe('__SYM_COOKIE_PATH__', $cookie_path);
-        defineSafe('__SYM_COOKIE_PREFIX__', self::Configuration()->get('cookie_prefix', 'symphony'));
-
-        $this->Cookie = new Cookie(__SYM_COOKIE_PREFIX__, TWO_WEEKS, __SYM_COOKIE_PATH__);
-    }
-
-    /**
-     * Setter for `$ExtensionManager` using the current
-     * Symphony instance as the parent. If for some reason this fails,
-     * a Symphony Error page will be thrown
-     */
-    public function initialiseExtensionManager()
-    {
-        if (self::$ExtensionManager instanceof ExtensionManager) {
-            return true;
-        }
-
-        self::$ExtensionManager = new ExtensionManager;
-
-        if (!(self::$ExtensionManager instanceof ExtensionManager)) {
-            $this->throwCustomError(tr('Error creating Symphony extension manager.'));
-        }
+        return self::get('Log');
     }
 
     /**
@@ -298,30 +381,7 @@ abstract class Symphony implements SingletonInterface
      */
     public static function ExtensionManager()
     {
-        return self::$ExtensionManager;
-    }
-
-    /**
-     * Setter for `$Database`, accepts a Database object. If `$database`
-     * is omitted, this function will set `$Database` to be of the `MySQL`
-     * class.
-     *
-     * @since Symphony 2.3
-     * @param StdClass $database (optional)
-     *  The class to handle all Database operations, if omitted this function
-     *  will set `self::$Database` to be an instance of the `MySQL` class.
-     * @return boolean
-     *  This function will always return true
-     */
-    public function setDatabase(StdClass $database = null)
-    {
-        if (self::Database()) {
-            return true;
-        }
-
-        self::$Database = (!is_null($database) ? $database : new MySQL);
-
-        return true;
+        return self::get('ExtensionManager');
     }
 
     /**
@@ -331,76 +391,7 @@ abstract class Symphony implements SingletonInterface
      */
     public static function Database()
     {
-        return self::$Database;
-    }
-
-    /**
-     * This will initialise the Database class and attempt to create a connection
-     * using the connection details provided in the Symphony configuration. If any
-     * errors occur whilst doing so, a Symphony Error Page is displayed.
-     *
-     * @return boolean
-     *  This function will return true if the `$Database` was
-     *  initialised successfully.
-     */
-    public function initialiseDatabase()
-    {
-        $this->setDatabase();
-
-        $details = self::Configuration()->get('database');
-
-        try {
-            if (!self::Database()->connect($details['host'], $details['user'], $details['password'], $details['port'], $details['db'])) {
-                return false;
-            }
-
-            if (!self::Database()->isConnected()) {
-                return false;
-            }
-
-            self::Database()->setPrefix($details['tbl_prefix']);
-            self::Database()->setCharacterEncoding();
-            self::Database()->setCharacterSet();
-
-            // Set Timezone, need to convert human readable, ie. Australia/Brisbane to be +10:00
-            // @see https://github.com/symphonycms/symphony-2/issues/1726
-            $timezone = self::Configuration()->get('timezone', 'region');
-            $symphony_date = new DateTime('now', new DateTimeZone($timezone));
-
-            // MySQL wants the offset to be in the format +/-H:I, getOffset returns offset in seconds
-            $utc = new DateTime('now ' . $symphony_date->getOffset() . ' seconds', new DateTimeZone("UTC"));
-
-            // Support PHP5.2
-            // @see https://github.com/symphonycms/symphony-2/issues/1735
-            if (function_exists('date_diff') === false) {
-                $offset = mysqlDateDiff($utc, $symphony_date);
-            } else {
-                // On PHP5.3+ we can use DateInterval to format the difference
-                // in way that MySQL will be happy
-                $offset = $symphony_date->diff($utc)->format('%R%H:%I');
-            }
-
-            self::Database()->setTimeZone($offset);
-
-            if (self::Configuration()->get('query_caching', 'database') == 'off') {
-                self::Database()->disableCaching();
-            } elseif (self::Configuration()->get('query_caching', 'database') == 'on') {
-                self::Database()->enableCaching();
-            }
-        } catch (DatabaseException $e) {
-            $this->throwCustomError(
-                $e->getDatabaseErrorCode() . ': ' . $e->getDatabaseErrorMessage(),
-                tr('Symphony Database Error'),
-                Page::HTTP_STATUS_ERROR,
-                'database',
-                array(
-                    'error' => $e,
-                    'message' => tr('There was a problem whilst attempting to establish a database connection. Please check all connection information is correct.') . ' ' . tr('The following error was returned:')
-                )
-            );
-        }
-
-        return true;
+        return self::get('Database');
     }
 
     /**
@@ -422,44 +413,66 @@ abstract class Symphony implements SingletonInterface
      * @return boolean
      *  True if the Author was logged in, false otherwise
      */
-    public function login($username, $password, $isHash = false)
+    public static function login($username, $password, $isHash = false)
     {
-        $username = self::Database()->cleanValue($username);
-        $password = self::Database()->cleanValue($password);
+        if (!self::has('Author')) {
+            $database = self::get('Database');
+            $username = $database->cleanValue($username);
+            $password = $database->cleanValue($password);
 
-        if (strlen(trim($username)) > 0 && strlen(trim($password)) > 0) {
+            if (strlen(trim($username)) > 0 && strlen(trim($password)) > 0) {
+                $authormanager = self::get('author_manager_class');
 
-            $author = AuthorManager::fetch(
-                'id',
-                'ASC',
-                1,
-                null,
-                sprintf(
-                    "`username` = '%s'",
-                    $username
-                )
-            );
-
-            if (!empty($author) && Cryptography::compare($password, current($author)->get('password'), $isHash)) {
-                $this->Author = current($author);
-
-                // Only migrate hashes if there is no update available as the update might change the tbl_authors table.
-                if ($this->isUpgradeAvailable() === false && Cryptography::requiresMigration($this->Author->get('password'))) {
-                    $this->Author->set('password', Cryptography::hash($password));
-                    self::Database()->update(array('password' => $this->Author->get('password')), 'tbl_authors', " `id` = '" . $this->Author->get('id') . "'");
-                }
-
-                $this->Cookie->set('username', $username);
-                $this->Cookie->set('pass', $this->Author->get('password'));
-                self::Database()->update(
-                    array(
-                        'last_seen' => DateTimeObj::get('Y-m-d H:i:s')
-                    ),
-                    'tbl_authors',
-                    sprintf(" `id` = %d", $this->Author->get('id'))
+                $author = $authormanager::fetch(
+                    'id',
+                    'ASC',
+                    1,
+                    null,
+                    sprintf(
+                        "`username` = '%s'",
+                        $username
+                    )
                 );
 
-                return true;
+                if (!empty($author) && Cryptography::compare($password, current($author)->get('password'), $isHash)) {
+                    $author = current($author);
+
+                    self::singleton(
+                        'Author',
+                        function ($con) use ($author) {
+                            return $author;
+                        }
+                    );
+
+                    $author = self::get('Author');
+
+                    // Only migrate hashes if there is no update available as the update might change the tbl_authors table.
+                    if (self::isUpgradeAvailable() === false && Cryptography::requiresMigration($author->get('password'))) {
+                        $author->set('password', Cryptography::hash($password));
+                        $database->update(
+                            array(
+                                'password' => $author->get('password')
+                            ),
+                            'tbl_authors',
+                            " `id` = '" . $author->get('id') . "'"
+                        );
+                    }
+
+                    $cookie = self::get('Cookie');
+
+                    $cookie->set('username', $username);
+                    $cookie->set('pass', $author->get('password'));
+
+                    $database->update(
+                        array(
+                            'last_seen' => DateTimeObj::get('Y-m-d H:i:s')
+                        ),
+                        'tbl_authors',
+                        sprintf(" `id` = %d", $this->Author->get('id'))
+                    );
+
+                    return true;
+                }
             }
         }
 
@@ -480,16 +493,17 @@ abstract class Symphony implements SingletonInterface
      * @return boolean
      *  True if the Author is logged in, false otherwise
      */
-    public function loginFromToken($token)
+    public static function loginFromToken($token)
     {
-        $token = self::Database()->cleanValue($token);
+        $database = self::get('Database');
+        $token = $database->cleanValue($token);
 
         if (strlen(trim($token)) == 0) {
             return false;
         }
 
         if (strlen($token) == 6) {
-            $row = self::Database()->fetchRow(
+            $row = $database->fetchRow(
                 0,
                 sprintf(
                     "SELECT `a`.`id`, `a`.`username`, `a`.`password`
@@ -503,9 +517,9 @@ abstract class Symphony implements SingletonInterface
                 )
             );
 
-            self::Database()->delete('tbl_forgotpass', " `token` = '{$token}' ");
+            $database->delete('tbl_forgotpass', " `token` = '{$token}' ");
         } else {
-            $row = self::Database()->fetchRow(
+            $row = $database->fetchRow(
                 0,
                 sprintf(
                     "SELECT `id`, `username`, `password`
@@ -520,10 +534,26 @@ abstract class Symphony implements SingletonInterface
         }
 
         if ($row) {
-            $this->Author = AuthorManager::fetchByID($row['id']);
-            $this->Cookie->set('username', $row['username']);
-            $this->Cookie->set('pass', $row['password']);
-            self::Database()->update(array('last_seen' => DateTimeObj::getGMT('Y-m-d H:i:s')), 'tbl_authors', " `id` = '{$row['id']}'");
+            self::singleton(
+                'Author',
+                function ($con) use ($row) {
+                    $authormanager = $con::get('author_manager_class');
+
+                    return $authormanager::fetchByID($row['id']);
+                }
+            );
+
+            $cookie = $con::get('Cookie');
+            $cookie->set('username', $row['username']);
+            $cookie->set('pass', $row['password']);
+
+            $database->update(
+                array(
+                    'last_seen' => DateTimeObj::getGMT('Y-m-d H:i:s')
+                ),
+                'tbl_authors',
+                " `id` = '{$row['id']}'"
+            );
 
             return true;
         }
@@ -537,9 +567,9 @@ abstract class Symphony implements SingletonInterface
      *
      * @see core.Cookie#expire()
      */
-    public function logout()
+    public static function logout()
     {
-        $this->Cookie->expire();
+        self::get('Cookie')->expire();
     }
 
     /**
@@ -550,7 +580,7 @@ abstract class Symphony implements SingletonInterface
      *
      * @see core.Cookie#expire()
      */
-    public function isLoggedIn()
+    public static function isLoggedIn()
     {
         // Ensures that we're in the real world.. Also reduces three queries from database
         // We must return true otherwise exceptions are not shown
@@ -558,14 +588,19 @@ abstract class Symphony implements SingletonInterface
             return true;
         }
 
-        if ($this->Author) {
+        if (self::has('Author')) {
             return true;
         } else {
-            $username = self::Database()->cleanValue($this->Cookie->get('username'));
-            $password = self::Database()->cleanValue($this->Cookie->get('pass'));
+            $database = self::get('Database');
+            $cookie = self::get('Cookie');
+
+            $username = $database->cleanValue($cookie->get('username'));
+            $password = $database->cleanValue($cookie->get('pass'));
 
             if (strlen(trim($username)) > 0 && strlen(trim($password)) > 0) {
-                $author = AuthorManager::fetch(
+                $authormanager = self::get('author_manager_class');
+
+                $author = $authormanager::fetch(
                     'id',
                     'ASC',
                     1,
@@ -574,23 +609,34 @@ abstract class Symphony implements SingletonInterface
                 );
 
                 if (!empty($author) && Cryptography::compare($password, current($author)->get('password'), true)) {
-                    $this->Author = current($author);
-                    self::Database()->update(
+                    $author = current($author);
+
+                    self::singleton(
+                        'Author',
+                        function ($con) use ($author) {
+                            return $author;
+                        }
+                    );
+
+                    $author = self::get('Author');
+
+                    $database->update(
                         array('last_seen' => DateTimeObj::get('Y-m-d H:i:s')),
                         'tbl_authors',
-                        sprintf(" `id` = %d", $this->Author->get('id'))
+                        sprintf(" `id` = %d", $author->get('id'))
                     );
 
                     // Only set custom author language in the backend
                     if (class_exists('\\SymphonyCms\\Symphony\\Administration')) {
-                        Lang::set($this->Author->get('language'));
+                        Lang::set($author->get('language'));
                     }
 
                     return true;
                 }
             }
 
-            $this->Cookie->expire();
+            self::get('Cookie')->expire();
+
             return false;
         }
     }
@@ -603,14 +649,14 @@ abstract class Symphony implements SingletonInterface
      * @since Symphony 2.3.1
      * @return mixed
      */
-    public function getMigrationVersion()
+    public static function getMigrationVersion()
     {
-        if ($this->isInstallerAvailable()) {
+        if (self::isInstallerAvailable()) {
             $migrations = new DirectoryIterator(__DIR__.'/Install/Migrations');
             $migration_file = end($migrations);
             $migration_class = 'SymphonyCms\\Install\\Migrations\\' . $migration_file;
 
-            if(class_exists($migration_class)) {
+            if (class_exists($migration_class)) {
                 return call_user_func(array($migration_class, 'getVersion'));
             }
         } else {
@@ -624,11 +670,11 @@ abstract class Symphony implements SingletonInterface
      * @since Symphony 2.3.1
      * @return boolean
      */
-    public function isUpgradeAvailable()
+    public static function isUpgradeAvailable()
     {
-        if ($this->isInstallerAvailable()) {
+        if (self::isInstallerAvailable()) {
             $migration_version = $this->getMigrationVersion();
-            $current_version = Symphony::Configuration()->get('version', 'symphony');
+            $current_version = self::get('Configuration')->get('version', 'symphony');
             return version_compare($current_version, $migration_version, '<');
         } else {
             return false;
@@ -641,7 +687,7 @@ abstract class Symphony implements SingletonInterface
      * @since Symphony 2.3.1
      * @return boolean
      */
-    public function isInstallerAvailable()
+    public static function isInstallerAvailable()
     {
         return file_exists(DOCROOT . '/install.php');
     }
@@ -665,9 +711,9 @@ abstract class Symphony implements SingletonInterface
      *  Allows custom information to be passed to the Symphony Error Page
      *  that the template may want to expose, such as custom Headers etc.
      */
-    public function customError($heading, $message, $template = 'generic', array $additional = array())
+    public static function customError($heading, $message, $template = 'generic', array $additional = array())
     {
-        $this->throwCustomError($message, $heading, Page::HTTP_STATUS_ERROR, $template, $additional);
+        self::throwCustomError($message, $heading, Page::HTTP_STATUS_ERROR, $template, $additional);
     }
 
     /**
@@ -692,7 +738,7 @@ abstract class Symphony implements SingletonInterface
      *  Allows custom information to be passed to the Symphony Error Page
      *  that the template may want to expose, such as custom Headers etc.
      */
-    public function throwCustomError($message, $heading = 'Symphony Fatal Error', $status = Page::HTTP_STATUS_ERROR, $template = 'generic', array $additional = array())
+    public static function throwCustomError($message, $heading = 'Symphony Fatal Error', $status = Page::HTTP_STATUS_ERROR, $template = 'generic', array $additional = array())
     {
         GenericExceptionHandler::$enabled = true;
 
@@ -706,9 +752,9 @@ abstract class Symphony implements SingletonInterface
      * @since Symphony 2.3.2
      * @param Exception $ex
      */
-    public function setException(Exception $exception)
+    public static function setException(Exception $exception)
     {
-        $this->exception = $exception;
+        self::$exception = $exception;
     }
 
     /**
@@ -717,64 +763,9 @@ abstract class Symphony implements SingletonInterface
      * @since Symphony 2.3.2
      * @return Exception|null
      */
-    public function getException()
+    public static function getException()
     {
-        return $this->exception;
-    }
-
-    /**
-     * Given the `$page_id` and a `$column`, this function will return an
-     * array of the given `$column` for the Page, including all parents.
-     *
-     * @deprecated This function will be removed in Symphony 2.4. Use
-     * `PageManager::resolvePage` instead.
-     * @param mixed $page_id
-     * The ID of the Page that currently being viewed, or the handle of the
-     * current Page
-     * @return array
-     * An array of the current Page, containing the `$column`
-     * requested. The current page will be the last item the array, as all
-     * parent pages are prepended to the start of the array
-     */
-    public function resolvePage($page_id, $column)
-    {
-        return PageManager::resolvePage($page_id, $column);
-    }
-
-    /**
-     * Given the `$page_id`, return the complete title of the
-     * current page.
-     *
-     * @deprecated This function will be removed in Symphony 2.4. Use
-     * `PageManager::resolvePageTitle` instead.
-     * @param mixed $page_id
-     * The ID of the Page that currently being viewed, or the handle of the
-     * current Page
-     * @return string
-     * The title of the current Page. If the page is a child of another
-     * it will be prepended by the parent and a colon, ie. Articles: Read
-     */
-    public function resolvePageTitle($page_id)
-    {
-        return PageManager::resolvePage($page_id, 'title');
-    }
-
-    /**
-     * Given the `$page_id`, return the complete path to the
-     * current page.
-     *
-     * @deprecated This function will be removed in Symphony 2.4. Use
-     * `PageManager::resolvePagePath` instead.
-     * @param mixed $page_id
-     * The ID of the Page that currently being viewed, or the handle of the
-     * current Page
-     * @return string
-     *  The complete path to the current Page including any parent
-     *  Pages, ie. /articles/read
-     */
-    public function resolvePagePath($page_id)
-    {
-        return PageManager::resolvePage($page_id, 'handle');
+        return self::$exception;
     }
 
     /**
