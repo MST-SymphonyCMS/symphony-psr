@@ -14,8 +14,8 @@ namespace SymphonyCms\Toolkit;
  * @since Symphony 2.3
  */
 
-Class Sortable {
-
+class Sortable
+{
     /**
      * This method initializes the `$result`, `$sort` and `$order` variables by using the
      * `$_REQUEST` array. The `$result` is passed by reference, and is return of calling the

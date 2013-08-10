@@ -466,7 +466,7 @@ class BlueprintsEventsPage extends ResourcesPage
                 $about['trigger condition'] = $rootelement;
             }
 
-            $this->__injectAboutInformation($eventShell, $about);
+            $this->injectAboutInformation($eventShell, $about);
 
             // Replace the name
             $eventShell = str_replace('<!-- CLASS NAME -->', $classname, $eventShell);
@@ -773,7 +773,7 @@ class BlueprintsEventsPage extends ResourcesPage
         $shell = str_replace('<!-- FILTERS -->',  "'" . implode("'," . PHP_EOL . "\t\t\t\t'", $elements) . "'", $shell);
     }
 
-    public function __injectAboutInformation(&$shell, $details)
+    public function injectAboutInformation(&$shell, $details)
     {
         if (!is_array($details) || empty($details)) {
             return;

@@ -80,7 +80,7 @@ class PublishPage extends AdministrationPage
 
     public function switchboard($type = 'view')
     {
-        $function = ($type == 'action' ? '__action' : '__view') . ucfirst($this->_context['page']);
+        $function = ($type == 'action' ? 'action' : 'view') . ucfirst($this->_context['page']);
 
         if (!method_exists($this, $function)) {
             // If there is no action function, just return without doing anything

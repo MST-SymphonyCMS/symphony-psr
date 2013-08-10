@@ -9,6 +9,7 @@ use \SymphonyCms\Pages\AdministrationPage;
 use \SymphonyCms\Toolkit\Alert;
 use \SymphonyCms\Toolkit\PageManager;
 use \SymphonyCms\Toolkit\ResourceManager;
+use \SymphonyCms\Toolkit\Sortable;
 use \SymphonyCms\Toolkit\Widget;
 use \SymphonyCms\Toolkit\XMLElement;
 use \SymphonyCms\Utilities\General;

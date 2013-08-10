@@ -121,7 +121,7 @@ interface EventInterface
      * The load functions determines whether an event will be executed or not
      * by comparing the Event's action with the `$_POST` data. This function will
      * be called every time a page is loaded that an event is attached too. If the
-     * action does exist, it typically calls the `__trigger()` method, otherwise void.
+     * action does exist, it typically calls the `trigger()` method, otherwise void.
      *
      * @return mixed
      *  XMLElement with the event result or void if the action did not match

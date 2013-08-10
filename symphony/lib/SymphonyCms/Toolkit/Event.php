@@ -153,7 +153,7 @@ abstract class Event
      * @return XMLElement
      *  Returns an `XMLElement` with the event information (success or failure included)
      */
-    protected function __trigger()
+    protected function trigger()
     {
         return $this->execute();
     }

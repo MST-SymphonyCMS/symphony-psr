@@ -12,6 +12,7 @@ use \SymphonyCms\Toolkit\ResourceManager;
 use \SymphonyCms\Toolkit\XMLElement;
 use \SymphonyCms\Toolkit\XSLTProcess;
 use \SymphonyCms\Toolkit\Widget;
+use \SymphonyCms\Utilities\General;
 
 /**
  * Developers can create new Frontend pages from this class. It provides

@@ -8,7 +8,7 @@ use \SymphonyCms\Exceptions\DatabaseException;
 use \SymphonyCms\Interfaces\FileResourceInterface;
 use \SymphonyCms\Toolkit\Field;
 use \SymphonyCms\Toolkit\SectionManager;
-use \SympgonyCms\Utilities\General;
+use \SymphonyCms\Utilities\General;
 
 /**
  * The `FieldManager` class is responsible for managing all fields types in Symphony.
