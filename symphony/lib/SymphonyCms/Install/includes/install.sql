@@ -55,9 +55,11 @@ DROP TABLE IF EXISTS `tbl_extensions`;
 CREATE TABLE `tbl_extensions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+  `classname` varchar(255) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   `status` enum('enabled','disabled') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'enabled',
   `version` varchar(20) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY (`classname`),
   KEY `name` (`name`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
@@ -80,6 +82,7 @@ DROP TABLE IF EXISTS `tbl_fields`;
 CREATE TABLE `tbl_fields` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `label` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `classname` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
   `element_name` varchar(50) COLLATE utf8_unicode_ci NOT NULL,
   `type` varchar(32) COLLATE utf8_unicode_ci NOT NULL,
   `parent_section` int(11) NOT NULL DEFAULT '0',
@@ -88,6 +91,7 @@ CREATE TABLE `tbl_fields` (
   `location` enum('main','sidebar') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'main',
   `show_column` enum('yes','no') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'no',
   PRIMARY KEY (`id`),
+  UNIQUE KEY (`classname`),
   KEY `index` (`element_name`,`type`,`parent_section`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
