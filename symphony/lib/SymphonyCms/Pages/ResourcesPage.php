@@ -55,7 +55,7 @@ abstract class ResourcesPage extends AdministrationPage
             ResourceManager::setSortingField($type, 'name', false);
             ResourceManager::setSortingOrder($type, 'asc');
 
-            redirect(Administration::instance()->getCurrentPageURL());
+            redirect(Symphony::get('Engine')->getCurrentPageURL());
         }
 
         // By default, sorting information are retrieved from
@@ -69,7 +69,7 @@ abstract class ResourcesPage extends AdministrationPage
             ResourceManager::setSortingField($type, $sort, false);
             ResourceManager::setSortingOrder($type, $order);
 
-            redirect(Administration::instance()->getCurrentPageURL());
+            redirect(Symphony::get('Engine')->getCurrentPageURL());
         }
 
         return ResourceManager::fetch($params['type'], array(), array(), $sort . ' ' . $order);
@@ -282,7 +282,7 @@ abstract class ResourcesPage extends AdministrationPage
          *  in the With Selected menu. Options should follow the same format
          *  expected by `Widget::selectBuildOption`. Passed by reference.
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'AddCustomActions',
             $_REQUEST['symphony-page'],
             array(
@@ -327,7 +327,7 @@ abstract class ResourcesPage extends AdministrationPage
              *  An array of the selected rows. The value is usually the ID of the
              *  the associated object.
              */
-            Symphony::ExtensionManager()->notifyMembers(
+            Symphony::get('ExtensionManager')->notifyMembers(
                 'CustomActions',
                 $_REQUEST['symphony-page'],
                 array(
@@ -361,7 +361,7 @@ abstract class ResourcesPage extends AdministrationPage
                     }
 
                     if ($canProceed) {
-                        redirect(Administration::instance()->getCurrentPageURL());
+                        redirect(Symphony::get('Engine')->getCurrentPageURL());
                     }
                 } elseif (preg_match('/^(at|de)?tach-(to|from)-page-/', $_POST['with-selected'])) {
                     if (substr($_POST['with-selected'], 0, 6) == 'detach') {
@@ -379,7 +379,7 @@ abstract class ResourcesPage extends AdministrationPage
                     }
 
                     if ($canProceed) {
-                        redirect(Administration::instance()->getCurrentPageURL());
+                        redirect(Symphony::get('Engine')->getCurrentPageURL());
                     }
                 } elseif (preg_match('/^(at|de)?tach-all-pages$/', $_POST['with-selected'])) {
                     $pages = PageManager::fetch(false, array('id'));
@@ -398,7 +398,7 @@ abstract class ResourcesPage extends AdministrationPage
                         }
                     }
 
-                    redirect(Administration::instance()->getCurrentPageURL());
+                    redirect(Symphony::get('Engine')->getCurrentPageURL());
                 }
             }
         }

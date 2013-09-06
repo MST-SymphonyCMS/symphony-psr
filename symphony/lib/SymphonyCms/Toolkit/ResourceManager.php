@@ -69,7 +69,7 @@ class ResourceManager
      */
     public static function getSortingField($type)
     {
-        $result = Symphony::Configuration()->get(self::getColumnFromType($type) . '_index_sortby', 'sorting');
+        $result = Symphony::get('Configuration')->get(self::getColumnFromType($type) . '_index_sortby', 'sorting');
 
         return (is_null($result) ? 'name' : $result);
     }
@@ -84,7 +84,7 @@ class ResourceManager
      */
     public static function getSortingOrder($type)
     {
-        $result = Symphony::Configuration()->get(self::getColumnFromType($type) . '_index_order', 'sorting');
+        $result = Symphony::get('Configuration')->get(self::getColumnFromType($type) . '_index_order', 'sorting');
 
         return (is_null($result) ? 'asc' : $result);
     }
@@ -102,10 +102,10 @@ class ResourceManager
      */
     public static function setSortingField($type, $sort, $write = true)
     {
-        Symphony::Configuration()->set(self::getColumnFromType($type) . '_index_sortby', $sort, 'sorting');
+        Symphony::get('Configuration')->set(self::getColumnFromType($type) . '_index_sortby', $sort, 'sorting');
 
         if ($write) {
-            Symphony::Configuration()->write();
+            Symphony::get('Configuration')->write();
         }
     }
 
@@ -122,10 +122,10 @@ class ResourceManager
      */
     public static function setSortingOrder($type, $order, $write = true)
     {
-        Symphony::Configuration()->set(self::getColumnFromType($type) . '_index_order', $order, 'sorting');
+        Symphony::get('Configuration')->set(self::getColumnFromType($type) . '_index_order', $order, 'sorting');
 
         if ($write) {
-            Symphony::Configuration()->write();
+            Symphony::get('Configuration')->write();
         }
     }
 
@@ -185,7 +185,7 @@ class ResourceManager
                 $extension = self::getExtensionFromHandle($type, $r['handle']);
 
                 if (!empty($extension)) {
-                    $extension = Symphony::ExtensionManager()->about($extension);
+                    $extension = Symphony::get('ExtensionManager')->about($extension);
                     $r['source'] = array(
                         'name' => $extension['name'],
                         'handle' => Lang::createHandle($extension['name'])

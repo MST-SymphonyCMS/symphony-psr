@@ -57,7 +57,7 @@ class SystemPreferencesPage extends AdministrationPage
             asort($languages);
 
             foreach ($languages as $code => $name) {
-                $options[] = array($code, $code == Symphony::Configuration()->get('lang', 'symphony'), $name);
+                $options[] = array($code, $code == Symphony::get('Configuration')->get('lang', 'symphony'), $name);
             }
             $select = Widget::Select('settings[symphony][lang]', $options);
             $label->appendChild($select);
@@ -112,7 +112,7 @@ class SystemPreferencesPage extends AdministrationPage
          * @param array $errors
          *  An array of errors
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'AddCustomPreferenceFieldsets',
             '/system/preferences/',
             array(
@@ -151,7 +151,7 @@ class SystemPreferencesPage extends AdministrationPage
          * @param string $context
          * '/system/preferences/'
          */
-        Symphony::ExtensionManager()->notifyMembers('CustomActions', '/system/preferences/');
+        Symphony::get('ExtensionManager')->notifyMembers('CustomActions', '/system/preferences/');
 
         if (isset($_POST['action']['save'])) {
             $settings = $_POST['settings'];
@@ -168,15 +168,15 @@ class SystemPreferencesPage extends AdministrationPage
              * @param array $errors
              *  An array of errors passed by reference
              */
-            Symphony::ExtensionManager()->notifyMembers('Save', '/system/preferences/', array('settings' => &$settings, 'errors' => &$this->_errors));
+            Symphony::get('ExtensionManager')->notifyMembers('Save', '/system/preferences/', array('settings' => &$settings, 'errors' => &$this->_errors));
 
             if (!is_array($this->_errors) || empty($this->_errors)) {
 
                 if (is_array($settings) && !empty($settings)) {
-                    Symphony::Configuration()->setArray($settings, false);
+                    Symphony::get('Configuration')->setArray($settings, false);
                 }
 
-                Symphony::Configuration()->write();
+                Symphony::get('Configuration')->write();
 
                 redirect(SYMPHONY_URL . '/system/preferences/success/');
             }

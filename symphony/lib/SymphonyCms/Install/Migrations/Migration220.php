@@ -48,41 +48,41 @@ class Migration220 extends Migration
     {
         // 2.2.0dev
         if (version_compare(self::$existing_version, '2.2.0dev', '<=')) {
-            Symphony::Configuration()->set('version', '2.2dev', 'symphony');
+            Symphony::get('Configuration')->set('version', '2.2dev', 'symphony');
 
-            if (Symphony::Database()->tableContainsField('tbl_sections_association', 'cascading_deletion')) {
-                Symphony::Database()->query(
+            if (Symphony::get('Database')->tableContainsField('tbl_sections_association', 'cascading_deletion')) {
+                Symphony::get('Database')->query(
                     'ALTER TABLE `tbl_sections_association` CHANGE  `cascading_deletion` `hide_association` enum("yes","no") COLLATE utf8_unicode_ci NOT null DEFAULT "no";'
                 );
 
                 // Update Select table to include the new association field
-                Symphony::Database()->query('ALTER TABLE `tbl_fields_select` ADD `show_association` ENUM( "yes", "no" ) COLLATE utf8_unicode_ci NOT null DEFAULT "yes"');
+                Symphony::get('Database')->query('ALTER TABLE `tbl_fields_select` ADD `show_association` ENUM( "yes", "no" ) COLLATE utf8_unicode_ci NOT null DEFAULT "yes"');
             }
 
-            if (Symphony::Database()->tableContainsField('tbl_authors', 'default_section')) {
+            if (Symphony::get('Database')->tableContainsField('tbl_authors', 'default_section')) {
                 // Allow Authors to be set to any area in the backend.
-                Symphony::Database()->query(
+                Symphony::get('Database')->query(
                     'ALTER TABLE `tbl_authors` CHANGE `default_section` `default_area` VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT null;'
                 );
             }
 
-            Symphony::Configuration()->write();
+            Symphony::get('Configuration')->write();
         }
 
         // 2.2.0
         if (version_compare(self::$existing_version, '2.2', '<=')) {
-            Symphony::Configuration()->set('version', '2.2', 'symphony');
-            Symphony::Configuration()->set('datetime_separator', ' ', 'region');
-            Symphony::Configuration()->set('strict_error_handling', 'yes', 'symphony');
+            Symphony::get('Configuration')->set('version', '2.2', 'symphony');
+            Symphony::get('Configuration')->set('datetime_separator', ' ', 'region');
+            Symphony::get('Configuration')->set('strict_error_handling', 'yes', 'symphony');
 
             // We've added UNIQUE KEY indexes to the Author, Checkbox, Date, Input, Textarea and Upload Fields
             // Time to go through the entry tables and make this change as well.
-            $author = Symphony::Database()->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fieldsauthor`");
-            $checkbox = Symphony::Database()->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_checkbox`");
-            $date = Symphony::Database()->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_date`");
-            $input = Symphony::Database()->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_input`");
-            $textarea = Symphony::Database()->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_textarea`");
-            $upload = Symphony::Database()->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_upload`");
+            $author = Symphony::get('Database')->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fieldsauthor`");
+            $checkbox = Symphony::get('Database')->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_checkbox`");
+            $date = Symphony::get('Database')->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_date`");
+            $input = Symphony::get('Database')->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_input`");
+            $textarea = Symphony::get('Database')->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_textarea`");
+            $upload = Symphony::get('Database')->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_upload`");
 
             $field_ids = array_merge($author, $checkbox, $date, $input, $textarea, $upload);
 
@@ -90,21 +90,21 @@ class Migration220 extends Migration
                 $table = '`tbl_entries_data_' . $id . '`';
 
                 try {
-                    Symphony::Database()->query("ALTER TABLE " . $table . " DROP INDEX `entry_id`");
+                    Symphony::get('Database')->query("ALTER TABLE " . $table . " DROP INDEX `entry_id`");
                 } catch (Exception $ex) {
 
                 }
 
                 try {
-                    Symphony::Database()->query("CREATE UNIQUE INDEX `entry_id` ON " . $table . " (`entry_id`)");
-                    Symphony::Database()->query("OPTIMIZE TABLE " . $table);
+                    Symphony::get('Database')->query("CREATE UNIQUE INDEX `entry_id` ON " . $table . " (`entry_id`)");
+                    Symphony::get('Database')->query("OPTIMIZE TABLE " . $table);
                 } catch (Exception $ex) {
 
                 }
             }
         }
 
-        if (Symphony::Configuration()->write() === false) {
+        if (Symphony::get('Configuration')->write() === false) {
             throw new Exception('Failed to write configuration file, please check the file permissions.');
         } else {
             return true;

@@ -51,35 +51,35 @@ class Migration231 extends Migration
 
             // Remove unused setting from the Author field
             $author_table = 'tbl_fieldsauthor';
-            if (Symphony::Database()->tableContainsField($author_table, 'allowauthor_change')) {
-                Symphony::Database()->query("ALTER TABLE `$author_table` DROP `allowauthor_change`;");
+            if (Symphony::get('Database')->tableContainsField($author_table, 'allowauthor_change')) {
+                Symphony::get('Database')->query("ALTER TABLE `$author_table` DROP `allowauthor_change`;");
             }
 
             // Author Types [#1219]
-            if (!Symphony::Database()->tableContainsField($author_table, 'author_types')) {
-                Symphony::Database()->query("ALTER TABLE `$author_table` ADD `author_types` VARCHAR(255) DEFAULT null;");
+            if (!Symphony::get('Database')->tableContainsField($author_table, 'author_types')) {
+                Symphony::get('Database')->query("ALTER TABLE `$author_table` ADD `author_types` VARCHAR(255) DEFAULT null;");
             }
 
             // Entries Modification Date [#983]
-            if (!Symphony::Database()->tableContainsField('tbl_entries', 'modification_date')) {
-                Symphony::Database()->query("ALTER TABLE `tbl_entries` ADD `modification_date` DATETIME NOT null;");
-                Symphony::Database()->query("ALTER TABLE `tbl_entries` ADD KEY `modification_date` (`modification_date`)");
-                Symphony::Database()->query("UPDATE `tbl_entries` SET modification_date = creation_date;");
+            if (!Symphony::get('Database')->tableContainsField('tbl_entries', 'modification_date')) {
+                Symphony::get('Database')->query("ALTER TABLE `tbl_entries` ADD `modification_date` DATETIME NOT null;");
+                Symphony::get('Database')->query("ALTER TABLE `tbl_entries` ADD KEY `modification_date` (`modification_date`)");
+                Symphony::get('Database')->query("UPDATE `tbl_entries` SET modification_date = creation_date;");
             }
 
-            if (!Symphony::Database()->tableContainsField('tbl_entries', 'modification_date_gmt')) {
-                Symphony::Database()->query("ALTER TABLE `tbl_entries` ADD `modification_date_gmt` DATETIME NOT null;");
-                Symphony::Database()->query("ALTER TABLE `tbl_entries` ADD KEY `modification_date_gmt` (`modification_date_gmt`)");
-                Symphony::Database()->query("UPDATE `tbl_entries` SET modification_date_gmt = creation_date_gmt;");
+            if (!Symphony::get('Database')->tableContainsField('tbl_entries', 'modification_date_gmt')) {
+                Symphony::get('Database')->query("ALTER TABLE `tbl_entries` ADD `modification_date_gmt` DATETIME NOT null;");
+                Symphony::get('Database')->query("ALTER TABLE `tbl_entries` ADD KEY `modification_date_gmt` (`modification_date_gmt`)");
+                Symphony::get('Database')->query("UPDATE `tbl_entries` SET modification_date_gmt = creation_date_gmt;");
             }
 
             // Cleanup #977, remove `entry_order` & `entry_order_direction` from `tbl_sections`
-            if (Symphony::Database()->tableContainsField('tbl_sections', 'entry_order')) {
-                Symphony::Database()->query("ALTER TABLE `tbl_sections` DROP `entry_order`;");
+            if (Symphony::get('Database')->tableContainsField('tbl_sections', 'entry_order')) {
+                Symphony::get('Database')->query("ALTER TABLE `tbl_sections` DROP `entry_order`;");
             }
 
-            if (Symphony::Database()->tableContainsField('tbl_sections', 'entry_order_direction')) {
-                Symphony::Database()->query("ALTER TABLE `tbl_sections` DROP `entry_order_direction`;");
+            if (Symphony::get('Database')->tableContainsField('tbl_sections', 'entry_order_direction')) {
+                Symphony::get('Database')->query("ALTER TABLE `tbl_sections` DROP `entry_order_direction`;");
             }
         }
 
@@ -106,14 +106,14 @@ class Migration231 extends Migration
             }
 
             // Increase length of password field to accomodate longer hashes
-            Symphony::Database()->query("ALTER TABLE `tbl_authors` CHANGE `password` `password` VARCHAR( 150 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT null");
+            Symphony::get('Database')->query("ALTER TABLE `tbl_authors` CHANGE `password` `password` VARCHAR( 150 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT null");
         }
 
         // Update the version information
-        Symphony::Configuration()->set('version', self::getVersion(), 'symphony');
-        Symphony::Configuration()->set('useragent', 'Symphony/' . self::getVersion(), 'general');
+        Symphony::get('Configuration')->set('version', self::getVersion(), 'symphony');
+        Symphony::get('Configuration')->set('useragent', 'Symphony/' . self::getVersion(), 'general');
 
-        if (Symphony::Configuration()->write() === false) {
+        if (Symphony::get('Configuration')->write() === false) {
             throw new Exception('Failed to write configuration file, please check the file permissions.');
         } else {
             return true;

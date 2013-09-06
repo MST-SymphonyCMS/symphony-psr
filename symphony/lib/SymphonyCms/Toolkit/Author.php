@@ -175,7 +175,7 @@ class Author
         }
 
         if ($this->get('id')) {
-            $currentauthor = Symphony::Database()->fetchRow(
+            $currentauthor = Symphony::get('Database')->fetchRow(
                 0,
                 sprintf(
                     "SELECT `email`, `username`
@@ -196,7 +196,7 @@ class Author
             // Check that if an existing Author changes their email address that
             // it is not already used by another Author
             if ($currentauthor['email'] != $this->get('email')
-                && Symphony::Database()->fetchVar(
+                && Symphony::get('Database')->fetchVar(
                     'count',
                     0,
                     sprintf(
@@ -209,7 +209,7 @@ class Author
             ) {
                 $errors['email'] = tr('E-mail address is already taken');
             }
-        } elseif (Symphony::Database()->fetchVar(
+        } elseif (Symphony::get('Database')->fetchVar(
             'id',
             0,
             sprintf(
@@ -231,7 +231,7 @@ class Author
             // Check that if it's an existing Author that the username is not already
             // in use by another Author if they are trying to change it.
             if ($currentauthor['username'] != $this->get('username')
-                && Symphony::Database()->fetchVar(
+                && Symphony::get('Database')->fetchVar(
                     'count',
                     0,
                     sprintf(
@@ -244,7 +244,7 @@ class Author
             ) {
                 $errors['username'] = tr('Username is already taken');
             }
-        } elseif (Symphony::Database()->fetchVar(
+        } elseif (Symphony::get('Database')->fetchVar(
             'id',
             0,
             sprintf(

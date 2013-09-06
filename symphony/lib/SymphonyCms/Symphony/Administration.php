@@ -4,7 +4,6 @@ namespace SymphonyCms\Symphony;
 
 use \Exception;
 use \SymphonyCms\Symphony;
-use \SymphonyCms\Interfaces\SingletonInterface;
 use \SymphonyCms\Pages\AdministrationPage;
 use \SymphonyCms\Pages\Content\LoginPage;
 use \SymphonyCms\Toolkit\Alert;
@@ -21,23 +20,17 @@ use \SymphonyCms\Toolkit\SectionManager;
  * @package SymphonyCms
  * @subpackage Symphony
  */
-class Administration implements SingletonInterface
+class Administration
 {
-    /**
-     * An instance of the Symphony class, either `Administration` or `Frontend`.
-     * @var Symphony
-     */
-    protected static $instance = null;
-
     /**
      * The path of the current page, ie. '/blueprints/sections/'
      * @var string
      */
-    private $_currentPage  = null;
+    private $current_page  = null;
 
     /**
      * An associative array of the page's callback, including the keys
-     * 'driver', which is a lowercase version of `$this->_currentPage`
+     * 'driver', which is a lowercase version of `$this->current_page`
      * with any slashes removed, 'classname', which is the name of the class
      * for this page, 'pageroot', which is the root page for the given page, (ie.
      * excluding /saved/, /created/ or any sub pages of the current page that are
@@ -46,7 +39,7 @@ class Administration implements SingletonInterface
      * @see toolkit.AdministrationPage#switchboard()
      * @var array
      */
-    private $_callback = null;
+    private $callback = null;
 
     /**
      * The class representation of the current Symphony backend page,
@@ -57,22 +50,6 @@ class Administration implements SingletonInterface
     public $Page;
 
     /**
-     * This function returns an instance of the Administration
-     * class. It is the only way to create a new Administration, as
-     * it implements the Singleton interface
-     *
-     * @return Administration
-     */
-    public static function instance()
-    {
-        if (!(self::$instance instanceof Administration)) {
-            self::$instance = new Administration;
-        }
-
-        return self::$instance;
-    }
-
-    /**
      * Returns the current Page path, excluding the domain and Symphony path.
      *
      * @return string
@@ -80,7 +57,7 @@ class Administration implements SingletonInterface
      */
     public function getCurrentPageURL()
     {
-        return $this->_currentPage;
+        return $this->current_page;
     }
 
     /**
@@ -97,10 +74,10 @@ class Administration implements SingletonInterface
     public function isLoggedIn()
     {
         if (isset($_REQUEST['auth-token']) && $_REQUEST['auth-token'] && in_array(strlen($_REQUEST['auth-token']), array(6, 8))) {
-            return $this->loginFromToken($_REQUEST['auth-token']);
+            return Symphony::loginFromToken($_REQUEST['auth-token']);
         }
 
-        return parent::isLoggedIn();
+        return Symphony::isLoggedIn();
     }
 
     /**
@@ -127,7 +104,7 @@ class Administration implements SingletonInterface
                 // to the page after `SYMPHONY_URL`
                 $default_area = null;
 
-                if (is_numeric($this->Author->get('default_area'))) {
+                if (is_numeric(Symphony::get('Author')->get('default_area'))) {
                     $default_section = SectionManager::fetch($this->Author->get('default_area'));
 
                     if ($default_section instanceof Section) {
@@ -147,12 +124,12 @@ class Administration implements SingletonInterface
                     if (!is_null($section_handle)) {
                         $default_area = "/publish/{$section_handle}/";
                     }
-                } elseif (!is_null($this->Author->get('default_area'))) {
-                    $default_area = preg_replace('/^' . preg_quote(SYMPHONY_URL, '/') . '/i', '', $this->Author->get('default_area'));
+                } elseif (!is_null(Symphony::get('Author')->get('default_area'))) {
+                    $default_area = preg_replace('/^' . preg_quote(SYMPHONY_URL, '/') . '/i', '', Symphony::get('Author')->get('default_area'));
                 }
 
                 if (is_null($default_area)) {
-                    if ($this->Author->isDeveloper()) {
+                    if (Symphony::get('Author')->isDeveloper()) {
                         $all_sections = SectionManager::fetch();
                         $section_handle = !empty($all_sections) ? $all_sections[0]->get('handle') : null;
 
@@ -164,7 +141,7 @@ class Administration implements SingletonInterface
                             redirect(SYMPHONY_URL . '/blueprints/sections/');
                         }
                     } else {
-                        redirect(SYMPHONY_URL . "/system/authors/edit/".$this->Author->get('id')."/");
+                        redirect(SYMPHONY_URL . "/system/authors/edit/".Symphony::Author()->get('id')."/");
                     }
                 } else {
                     redirect(SYMPHONY_URL . $default_area);
@@ -172,7 +149,7 @@ class Administration implements SingletonInterface
             }
         }
 
-        if (!$this->_callback = $this->getPageCallback($page)) {
+        if (!$this->callback = $this->getPageCallback($page)) {
             if ($page === '/publish/') {
                 $sections = SectionManager::fetch(null, 'ASC', 'sortorder');
                 $section = current($sections);
@@ -181,9 +158,9 @@ class Administration implements SingletonInterface
                 $this->errorPageNotFound();
             }
         }
-        $this->Page = new $this->_callback['classname'];
+        $this->Page = new $this->callback['classname'];
 
-        if (!$is_logged_in && $this->_callback['driver'] != 'login') {
+        if (!$is_logged_in && $this->callback['driver'] != 'login') {
             if (is_callable(array($this->Page, 'handleFailedAuthorisation'))) {
                 $this->Page->handleFailedAuthorisation();
             } else {
@@ -191,26 +168,26 @@ class Administration implements SingletonInterface
                 $this->Page->build(array('redirect' => $page));
             }
         } else {
-            if (!is_array($this->_callback['context'])) {
-                $this->_callback['context'] = array();
+            if (!is_array($this->callback['context'])) {
+                $this->callback['context'] = array();
             }
 
             // Do any extensions need updating?
-            $extensions = Symphony::ExtensionManager()->listInstalledHandles();
+            $extensions = Symphony::get('ExtensionManager')->listInstalledHandles();
 
             if (is_array($extensions) && !empty($extensions) && $this->canAccessAlerts()) {
                 foreach ($extensions as $name) {
                     try {
-                        $about = Symphony::ExtensionManager()->about($name);
+                        $about = Symphony::get('ExtensionManager')->about($name);
                     } catch (Exception $ex) {
                         // The extension cannot be found, show an error message and let the user remove
                         // or rename the extension folder.
                         if (isset($_POST['extension-missing'])) {
                             if (isset($_POST['action']['delete'])) {
-                                Symphony::ExtensionManager()->cleanupDatabase();
+                                Symphony::get('ExtensionManager')->cleanupDatabase();
                             } elseif (isset($_POST['action']['rename'])) {
                                 if (!@rename(EXTENSIONS . '/' . $_POST['existing-folder'], EXTENSIONS . '/' . $_POST['new-folder'])) {
-                                    $this->throwCustomError(
+                                    Symphony::throwCustomError(
                                         tr(
                                             'Could not find extension %s at location %s.',
                                             array(
@@ -247,10 +224,10 @@ class Administration implements SingletonInterface
 
             // Check for update Alert
             // Scan install/migrations directory for the most recent updater and compare
-            if ($this->isInstallerAvailable() && $this->canAccessAlerts()) {
+            if (Symphony::isInstallerAvailable() && $this->canAccessAlerts()) {
                 try {
                     // The updater contains a version higher than the current Symphony version.
-                    if ($this->isUpgradeAvailable()) {
+                    if (Symphony::isUpgradeAvailable()) {
                         $message = tr('An update has been found in your installation to upgrade Symphony to %s.', array($this->getMigrationVersion())) . ' <a href="' . URL . '/install/">' . tr('View update.') . '</a>';
                     } else {
                         // The updater contains a version lower than the current Symphony version.
@@ -265,7 +242,7 @@ class Administration implements SingletonInterface
                 $this->Page->pageAlert($message, Alert::NOTICE);
             }
 
-            $this->Page->build($this->_callback['context']);
+            $this->Page->build($this->callback['context']);
         }
 
         return $this->Page;
@@ -281,7 +258,7 @@ class Administration implements SingletonInterface
      */
     private function canAccessAlerts()
     {
-        if ($this->Page instanceof AdministrationPage && $this->isLoggedIn() && Administration::instance()->Author->isDeveloper()) {
+        if ($this->Page instanceof AdministrationPage && Symphony::isLoggedIn() && Symphony::get('Author')->isDeveloper()) {
             return true;
         } else {
             return false;
@@ -306,13 +283,13 @@ class Administration implements SingletonInterface
      */
     public function getPageCallback($page = null)
     {
-        if (!$page && $this->_callback) {
-            return $this->_callback;
-        } elseif (!$page && !$this->_callback) {
+        if (!$page && $this->callback) {
+            return $this->callback;
+        } elseif (!$page && !$this->callback) {
             trigger_error(tr('Cannot request a page callback without first specifying the page.'));
         }
 
-        $this->_currentPage = SYMPHONY_URL . preg_replace('/\/{2,}/', '/', $page);
+        $this->current_page = SYMPHONY_URL . preg_replace('/\/{2,}/', '/', $page);
         $bits = preg_split('/\//', trim($page, '/'), 3, PREG_SPLIT_NO_EMPTY);
         $callback = array(
             'driver' => null,
@@ -425,11 +402,11 @@ class Administration implements SingletonInterface
          *  class, `pageroot` the rootpage, before any extra URL params and `context` can
          *  provide additional information about the page
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'AdminPagePostCallback',
             '/backend/',
             array(
-                'page' => $this->_currentPage,
+                'page' => $this->current_page,
                 'parts' => $bits,
                 'callback' => &$callback
             )
@@ -456,7 +433,7 @@ class Administration implements SingletonInterface
      */
     public function display($page)
     {
-        Symphony::Profiler()->sample('Page build process started');
+        Symphony::get('Profiler')->sample('Page build process started');
         $this->buildPage($page);
 
         /**
@@ -469,7 +446,7 @@ class Administration implements SingletonInterface
          *  extends HTMLPage. The Symphony backend uses a convention of contentPageName
          *  as the class that extends the HTMLPage
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'AdminPagePreGenerate',
             '/backend/',
             array(
@@ -487,7 +464,7 @@ class Administration implements SingletonInterface
          * @param string $output
          *  The resulting backend page HTML as a string, passed by reference
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'AdminPagePostGenerate',
             '/backend/',
             array(
@@ -495,7 +472,7 @@ class Administration implements SingletonInterface
             )
         );
 
-        Symphony::Profiler()->sample('Page built');
+        Symphony::get('Profiler')->sample('Page built');
 
         return $output;
     }
@@ -507,26 +484,10 @@ class Administration implements SingletonInterface
      */
     public function errorPageNotFound()
     {
-        $this->throwCustomError(
+        Symphony::throwCustomError(
             tr('The page you requested does not exist.'),
             tr('Page Not Found'),
             Page::HTTP_STATUS_NOT_FOUND
         );
-    }
-
-    /**
-     * Writes the current Symphony Configuration object to a file in the
-     * CONFIG directory. This will overwrite any existing configuration
-     * file every time this function is called.
-     *
-     * @deprecated This function is deprecated in Symphony 2.3 and will be
-     * removed in Symphony 2.4. Use `Configuration->write()` instead.
-     * @see core.Configuration#write()
-     * @return boolean
-     *  True if the Configuration object was successfully written, false otherwise
-     */
-    public function saveConfig()
-    {
-        return self::Configuration()->write();
     }
 }

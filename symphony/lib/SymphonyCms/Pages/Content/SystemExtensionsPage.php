@@ -4,7 +4,7 @@ namespace SymphonyCms\Pages\Content;
 
 use \SymphonyCms\Symphony;
 use \SymphonyCms\Pages\AdministrationPage;
-use \SymphonyCms\Toolkit\ExtensionManager;
+use \SymphonyCms\Extensions\ExtensionManager;
 use \SymphonyCms\Toolkit\Sortable;
 use \SymphonyCms\Toolkit\Widget;
 use \SymphonyCms\Toolkit\XMLElement;
@@ -71,7 +71,7 @@ class SystemExtensionsPage extends AdministrationPage
         } else {
             foreach ($extensions as $name => $about) {
                 $td1 = Widget::TableData($about['name']);
-                $installed_version = Symphony::ExtensionManager()->fetchInstalledVersion($name);
+                $installed_version = Symphony::get('ExtensionManager')->fetchInstalledVersion($name);
                 $td2 = Widget::TableData(is_null($installed_version) ? tr('Not Installed') : $installed_version);
 
                 // If the extension is using the new `extension.meta.xml` format, check the
@@ -150,7 +150,7 @@ class SystemExtensionsPage extends AdministrationPage
 
         $version = new XMLElement(
             'p',
-            'Symphony ' . Symphony::Configuration()->get('version', 'symphony'),
+            'Symphony ' . Symphony::get('Configuration')->get('version', 'symphony'),
             array(
                 'id' => 'version'
             )
@@ -183,7 +183,7 @@ class SystemExtensionsPage extends AdministrationPage
          *  in the With Selected menu. Options should follow the same format
          *  expected by `Widget::selectBuildOption`. Passed by reference.
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'AddCustomActions',
             '/system/extensions/',
             array(
@@ -214,7 +214,7 @@ class SystemExtensionsPage extends AdministrationPage
          *  An array of the selected rows. The value is usually the ID of the
          *  the associated object.
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'CustomActions',
             '/system/extensions/',
             array(
@@ -236,10 +236,10 @@ class SystemExtensionsPage extends AdministrationPage
                          * @param array $extensions
                          *  An array of all the extension name's to be enabled, passed by reference
                          */
-                        Symphony::ExtensionManager()->notifyMembers('ExtensionPreEnable', '/system/extensions/', array('extensions' => &$checked));
+                        Symphony::get('ExtensionManager')->notifyMembers('ExtensionPreEnable', '/system/extensions/', array('extensions' => &$checked));
 
                         foreach ($checked as $name) {
-                            if (Symphony::ExtensionManager()->enable($name) === false) {
+                            if (Symphony::get('ExtensionManager')->enable($name) === false) {
                                 return;
                             }
                         }
@@ -255,10 +255,10 @@ class SystemExtensionsPage extends AdministrationPage
                          * @param array $extensions
                          *  An array of all the extension name's to be disabled, passed by reference
                          */
-                        Symphony::ExtensionManager()->notifyMembers('ExtensionPreDisable', '/system/extensions/', array('extensions' => &$checked));
+                        Symphony::get('ExtensionManager')->notifyMembers('ExtensionPreDisable', '/system/extensions/', array('extensions' => &$checked));
 
                         foreach ($checked as $name) {
-                            Symphony::ExtensionManager()->disable($name);
+                            Symphony::get('ExtensionManager')->disable($name);
                         }
                         break;
                     case 'uninstall':
@@ -272,15 +272,15 @@ class SystemExtensionsPage extends AdministrationPage
                          * @param array $extensions
                          *  An array of all the extension name's to be uninstalled, passed by reference
                          */
-                        Symphony::ExtensionManager()->notifyMembers('ExtensionPreUninstall', '/system/extensions/', array('extensions' => &$checked));
+                        Symphony::get('ExtensionManager')->notifyMembers('ExtensionPreUninstall', '/system/extensions/', array('extensions' => &$checked));
 
                         foreach ($checked as $name) {
-                            Symphony::ExtensionManager()->uninstall($name);
+                            Symphony::get('ExtensionManager')->uninstall($name);
                         }
                         break;
                 }
 
-                redirect(Administration::instance()->getCurrentPageURL());
+                redirect(Symphony::get('Engine')->getCurrentPageURL());
             } catch (Exception $e) {
                 $this->pageAlert($e->getMessage(), Alert::ERROR);
             }

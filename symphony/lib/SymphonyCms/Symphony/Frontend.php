@@ -109,7 +109,7 @@ class Frontend implements SingletonInterface
          * @param string $context
          *  '/frontend/'
          */
-        Symphony::ExtensionManager()->notifyMembers('FrontendInitialised', '/frontend/');
+        Symphony::get('ExtensionManager')->notifyMembers('FrontendInitialised', '/frontend/');
 
         $output = self::$_page->generate($page);
 

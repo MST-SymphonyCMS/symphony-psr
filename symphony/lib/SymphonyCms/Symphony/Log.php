@@ -235,7 +235,7 @@ class Log
             return false;
         }
 
-        $permissions = (is_null(Symphony::Configuration())) ? '0664' : Symphony::Configuration()->get('write_mode', 'file');
+        $permissions = (Symphony::has('Configuration')) ? '0664' : Symphony::get('Configuration')->get('write_mode', 'file');
         return General::writeFile($this->_log_path, $message . ($addbreak ? PHP_EOL : ''), $permissions, 'a+');
     }
 
@@ -350,7 +350,7 @@ class Log
      */
     public function initialise($name)
     {
-        $version = (is_null(Symphony::Configuration())) ? VERSION : Symphony::Configuration()->get('version', 'symphony');
+        $version = (Symphony::has('Configuration')) ? VERSION : Symphony::get('Configuration')->get('version', 'symphony');
 
         $this->writeToLog($name, true);
         $this->writeToLog('Opened:  '. DateTimeObj::get('c'), true);

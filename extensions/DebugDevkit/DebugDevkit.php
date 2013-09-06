@@ -2,9 +2,9 @@
 
 namespace SymphonyCms\Extensions\DebugDevKit;
 
-use \SymphonyCms\Toolkit\Extension;
+use \SymphonyCms\Extensions\Extension;
 
-class ExtensionDebugDevKit extends Extension
+class DebugDevKitExtension extends Extension
 {
     public static $active = false;
 

@@ -2,7 +2,7 @@
 
 namespace SymphonyCms\Extensions\XSSFilter;
 
-use \SympyonyCms\Toolkit\Extension;
+use \SympyonyCms\Extensions\Extension;
 
 class XSSFilterExtension extends Extension
 {

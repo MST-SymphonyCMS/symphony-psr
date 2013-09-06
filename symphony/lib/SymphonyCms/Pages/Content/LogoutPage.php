@@ -19,7 +19,7 @@ class LogoutPage extends HTMLPage
 
     public function view()
     {
-        Administration::instance()->logout();
+        Symphony::get('Engine')->logout();
         redirect(URL);
     }
 

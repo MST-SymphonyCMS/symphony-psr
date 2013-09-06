@@ -69,7 +69,7 @@ class TextformatterManager implements FileResourceInterface
         if (is_file(TEXTFORMATTERS . "/formatter.$handle.php")) {
             return TEXTFORMATTERS;
         } else {
-            $extensions = Symphony::ExtensionManager()->listInstalledHandles();
+            $extensions = Symphony::get('ExtensionManager')->listInstalledHandles();
 
             if (is_array($extensions) && !empty($extensions)) {
                 foreach ($extensions as $e) {
@@ -118,7 +118,7 @@ class TextformatterManager implements FileResourceInterface
             }
         }
 
-        $extensions = Symphony::ExtensionManager()->listInstalledHandles();
+        $extensions = Symphony::get('ExtensionManager')->listInstalledHandles();
 
         if (is_array($extensions) && !empty($extensions)) {
             foreach ($extensions as $e) {

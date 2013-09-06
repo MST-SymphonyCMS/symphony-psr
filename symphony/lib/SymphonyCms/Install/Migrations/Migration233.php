@@ -48,7 +48,7 @@ class Migration233 extends Migration
     {
         if (version_compare(self::$existing_version, '2.3.3beta1', '<=')) {
             // Update DB for the new author role #1692
-            Symphony::Database()->query(
+            Symphony::get('Database')->query(
                 sprintf(
                     "ALTER TABLE `tbl_authors` CHANGE `user_type` `user_type` enum('author', 'manager', 'developer') DEFAULT 'author'",
                     $field
@@ -56,11 +56,11 @@ class Migration233 extends Migration
             );
 
             // Remove directory from the upload fields, #1719
-            $upload_tables = Symphony::Database()->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_upload`");
+            $upload_tables = Symphony::get('Database')->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_upload`");
 
             if (is_array($upload_tables) && !empty($upload_tables)) {
                 foreach ($upload_tables as $field) {
-                    Symphony::Database()->query(
+                    Symphony::get('Database')->query(
                         sprintf(
                             "UPDATE tbl_entries_data_%d SET file = substring_index(file, '/', -1)",
                             $field
@@ -72,16 +72,16 @@ class Migration233 extends Migration
 
         if (version_compare(self::$existing_version, '2.3.3beta2', '<=')) {
             // Update rows for associations
-            if (!Symphony::Configuration()->get('association_maximum_rows', 'symphony')) {
-                Symphony::Configuration()->set('association_maximum_rows', '5', 'symphony');
+            if (!Symphony::get('Configuration')->get('association_maximum_rows', 'symphony')) {
+                Symphony::get('Configuration')->set('association_maximum_rows', '5', 'symphony');
             }
         }
 
         // Update the version information
-        Symphony::Configuration()->set('version', self::getVersion(), 'symphony');
-        Symphony::Configuration()->set('useragent', 'Symphony/' . self::getVersion(), 'general');
+        Symphony::get('Configuration')->set('version', self::getVersion(), 'symphony');
+        Symphony::get('Configuration')->set('useragent', 'Symphony/' . self::getVersion(), 'general');
 
-        if (Symphony::Configuration()->write() === false) {
+        if (Symphony::get('Configuration')->write() === false) {
             throw new Exception('Failed to write configuration file, please check the file permissions.');
         } else {
             return true;

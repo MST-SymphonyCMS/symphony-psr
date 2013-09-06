@@ -48,11 +48,11 @@ class Migration232 extends Migration
     {
         //  Update DB for the new Mime-type length. #1534
         if (version_compare(self::$existing_version, '2.3.2beta1', '<=')) {
-            $upload_entry_tables = Symphony::Database()->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_upload`");
+            $upload_entry_tables = Symphony::get('Database')->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_upload`");
 
             if (is_array($upload_entry_tables) && !empty($upload_entry_tables)) {
                 foreach ($upload_entry_tables as $field) {
-                    Symphony::Database()->query(
+                    Symphony::get('Database')->query(
                         sprintf(
                             "ALTER TABLE `tbl_entries_data_%d` CHANGE `mimetype` `mimetype` varchar(100) DEFAULT null",
                             $field
@@ -64,13 +64,13 @@ class Migration232 extends Migration
 
         // Reapply increase length of password field to accomodate longer hashes
         // fix as it looks like we created an error in the 2.3.1 migration. RE #1648
-        Symphony::Database()->query("ALTER TABLE `tbl_authors` CHANGE `password` `password` VARCHAR( 150 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT null");
+        Symphony::get('Database')->query("ALTER TABLE `tbl_authors` CHANGE `password` `password` VARCHAR( 150 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT null");
 
         // Update the version information
-        Symphony::Configuration()->set('version', self::getVersion(), 'symphony');
-        Symphony::Configuration()->set('useragent', 'Symphony/' . self::getVersion(), 'general');
+        Symphony::get('Configuration')->set('version', self::getVersion(), 'symphony');
+        Symphony::get('Configuration')->set('useragent', 'Symphony/' . self::getVersion(), 'general');
 
-        if (Symphony::Configuration()->write() === false) {
+        if (Symphony::get('Configuration')->write() === false) {
             throw new Exception('Failed to write configuration file, please check the file permissions.');
         } else {
             return true;

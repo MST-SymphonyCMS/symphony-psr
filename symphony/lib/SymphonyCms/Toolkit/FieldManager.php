@@ -69,7 +69,7 @@ class FieldManager implements FileResourceInterface
         if (is_file(TOOLKIT . "/fields/field.{$type}.php")) {
             return TOOLKIT . '/fields';
         } else {
-            $extensions = Symphony::ExtensionManager()->listInstalledHandles();
+            $extensions = Symphony::get('ExtensionManager')->listInstalledHandles();
 
             if (is_array($extensions) && !empty($extensions)) {
                 foreach ($extensions as $e) {
@@ -122,11 +122,11 @@ class FieldManager implements FileResourceInterface
             $fields['sortorder'] = self::fetchNextSortOrder();
         }
 
-        if (!Symphony::Database()->insert($fields, 'tbl_fields')) {
+        if (!Symphony::get('Database')->insert($fields, 'tbl_fields')) {
             return false;
         }
 
-        $field_id = Symphony::Database()->getInsertID();
+        $field_id = Symphony::get('Database')->getInsertID();
 
         return $field_id;
     }
@@ -150,14 +150,14 @@ class FieldManager implements FileResourceInterface
         $type = self::fetchFieldTypeFromID($field_id);
 
         // Delete the original settings:
-        Symphony::Database()->delete("`tbl_fields_".$type."`", sprintf("`field_id` = %d LIMIT 1", $field_id));
+        Symphony::get('Database')->delete("`tbl_fields_".$type."`", sprintf("`field_id` = %d LIMIT 1", $field_id));
 
         // Insert the new settings into the type table:
         if (!isset($settings['field_id'])) {
             $settings['field_id'] = $field_id;
         }
 
-        return Symphony::Database()->insert($settings, 'tbl_fields_'.$type);
+        return Symphony::get('Database')->insert($settings, 'tbl_fields_'.$type);
     }
 
     /**
@@ -174,7 +174,7 @@ class FieldManager implements FileResourceInterface
      */
     public static function edit($id, array $fields)
     {
-        if (!Symphony::Database()->update($fields, "tbl_fields", " `id` = '$id'")) {
+        if (!Symphony::get('Database')->update($fields, "tbl_fields", " `id` = '$id'")) {
             return false;
         }
 
@@ -196,11 +196,11 @@ class FieldManager implements FileResourceInterface
         $existing = self::fetch($id);
         $existing->tearDown();
 
-        Symphony::Database()->delete('tbl_fields', " `id` = '$id'");
-        Symphony::Database()->delete('tbl_fields_'.$existing->handle(), " `field_id` = '$id'");
+        Symphony::get('Database')->delete('tbl_fields', " `id` = '$id'");
+        Symphony::get('Database')->delete('tbl_fields_'.$existing->handle(), " `field_id` = '$id'");
         SectionManager::removeSectionAssociation($id);
 
-        Symphony::Database()->query('DROP TABLE IF EXISTS `tbl_entries_data_'.$id.'`');
+        Symphony::get('Database')->query('DROP TABLE IF EXISTS `tbl_entries_data_'.$id.'`');
 
         return true;
     }
@@ -284,7 +284,7 @@ class FieldManager implements FileResourceInterface
                 isset($field_ids) ? " AND t1.`id` IN(" . implode(',', $field_ids) . ") " : " ORDER BY t1.`{$sortfield}` {$order}"
             );
 
-            if (!$result = Symphony::Database()->fetch($sql)) {
+            if (!$result = Symphony::get('Database')->fetch($sql)) {
                 return ($returnSingle ? null : array());
             }
 
@@ -296,7 +296,7 @@ class FieldManager implements FileResourceInterface
             // Loop over the `ids` array, which is grouped by field type
             // and get the field context.
             foreach ($ids as $type => $field_id) {
-                $field_contexts[$type] = Symphony::Database()->fetch(
+                $field_contexts[$type] = Symphony::get('Database')->fetch(
                     sprintf(
                         "SELECT * FROM `tbl_fields_%s` WHERE `field_id` IN (%s)",
                         $type,
@@ -360,7 +360,7 @@ class FieldManager implements FileResourceInterface
      */
     public static function fetchFieldTypeFromID($id)
     {
-        return Symphony::Database()->fetchVar('type', 0, "SELECT `type` FROM `tbl_fields` WHERE `id` = '$id' LIMIT 1");
+        return Symphony::get('Database')->fetchVar('type', 0, "SELECT `type` FROM `tbl_fields` WHERE `id` = '$id' LIMIT 1");
     }
 
     /**
@@ -371,7 +371,7 @@ class FieldManager implements FileResourceInterface
      */
     public static function fetchHandleFromID($id)
     {
-        return Symphony::Database()->fetchVar('element_name', 0, "SELECT `element_name` FROM `tbl_fields` WHERE `id` = '$id' LIMIT 1");
+        return Symphony::get('Database')->fetchVar('element_name', 0, "SELECT `element_name` FROM `tbl_fields` WHERE `id` = '$id' LIMIT 1");
     }
 
     /**
@@ -424,7 +424,7 @@ class FieldManager implements FileResourceInterface
                     continue;
                 }
 
-                $element_names[] = Symphony::Database()->cleanValue(trim($parts[0]));
+                $element_names[] = Symphony::get('Database')->cleanValue(trim($parts[0]));
             }
 
             $schema_sql = empty($element_names) ? null : sprintf(
@@ -443,7 +443,7 @@ class FieldManager implements FileResourceInterface
             return false;
         }
 
-        $result = Symphony::Database()->fetch($schema_sql);
+        $result = Symphony::get('Database')->fetch($schema_sql);
 
         if (count($result) == 1) {
             return (int)$result[0]['id'];
@@ -466,7 +466,7 @@ class FieldManager implements FileResourceInterface
      */
     public static function fetchNextSortOrder()
     {
-        $next = Symphony::Database()->fetchVar(
+        $next = Symphony::get('Database')->fetchVar(
             "next",
             0,
             "SELECT
@@ -492,7 +492,7 @@ class FieldManager implements FileResourceInterface
      */
     public static function fetchFieldsSchema($section_id)
     {
-        return Symphony::Database()->fetch(
+        return Symphony::get('Database')->fetch(
             sprintf(
                 "SELECT `id`, `element_name`, `type`, `location`
                 FROM `tbl_fields`
@@ -514,7 +514,7 @@ class FieldManager implements FileResourceInterface
     {
         $structure = General::listStructure(__DIR__ . '/../Fields', '/Field[A-Z][a-z0-9_-]+.php/i', false, 'asc', __DIR__ . '/../Fields');
 
-        $extensions = Symphony::ExtensionManager()->listInstalledHandles();
+        $extensions = Symphony::get('ExtensionManager')->listInstalledHandles();
 
         if (is_array($extensions) && !empty($extensions)) {
             foreach ($extensions as $handle) {
@@ -583,7 +583,7 @@ class FieldManager implements FileResourceInterface
      */
     public static function isFieldUsed($field_type)
     {
-        return Symphony::Database()->fetchVar(
+        return Symphony::get('Database')->fetchVar(
             'count',
             0,
             sprintf(
@@ -604,19 +604,19 @@ class FieldManager implements FileResourceInterface
      */
     public static function isTextFormatterUsed($text_formatter_handle)
     {
-        $fields = Symphony::Database()->fetchCol('type', "SELECT DISTINCT `type` FROM `tbl_fields` WHERE `type` NOT IN ('author', 'checkbox', 'date', 'input', 'select', 'taglist', 'upload')");
+        $fields = Symphony::get('Database')->fetchCol('type', "SELECT DISTINCT `type` FROM `tbl_fields` WHERE `type` NOT IN ('author', 'checkbox', 'date', 'input', 'select', 'taglist', 'upload')");
 
         if (!empty($fields)) {
             foreach ($fields as $field) {
                 try {
-                    $table = Symphony::Database()->fetchVar(
+                    $table = Symphony::get('Database')->fetchVar(
                         'count',
                         0,
                         sprintf(
                             "SELECT COUNT(*) AS `count`
                             FROM `tbl_fields_%s`
                             WHERE `formatter` = '%s'",
-                            Symphony::Database()->cleanValue($field),
+                            Symphony::get('Database')->cleanValue($field),
                             $text_formatter_handle
                         )
                     );

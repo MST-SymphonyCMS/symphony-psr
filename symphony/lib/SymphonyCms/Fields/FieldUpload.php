@@ -63,7 +63,7 @@ class FieldUpload extends Field implements ExportableFieldInterface, ImportableF
 
     public function createTable()
     {
-        return Symphony::Database()->query(
+        return Symphony::get('Database')->query(
             "CREATE TABLE IF NOT EXISTS `tbl_entries_data_" . $this->get('id') . "` (
               `id` int(11) unsigned NOT null auto_increment,
               `entry_id` int(11) unsigned NOT null,
@@ -407,7 +407,7 @@ class FieldUpload extends Field implements ExportableFieldInterface, ImportableF
 
             // Grab the existing entry data to preserve the MIME type and size information
             if (isset($entry_id)) {
-                $row = Symphony::Database()->fetchRow(
+                $row = Symphony::get('Database')->fetchRow(
                     0,
                     sprintf(
                         "SELECT `file`, `mimetype`, `size`, `meta` FROM `tbl_entries_data_%d` WHERE `entry_id` = %d",
@@ -449,7 +449,7 @@ class FieldUpload extends Field implements ExportableFieldInterface, ImportableF
 
         // Check to see if the entry already has a file associated with it:
         if (is_null($entry_id) === false) {
-            $row = Symphony::Database()->fetchRow(
+            $row = Symphony::get('Database')->fetchRow(
                 0,
                 sprintf(
                     "SELECT * FROM `tbl_entries_data_%s` WHERE `entry_id` = %d LIMIT 1",
@@ -508,7 +508,7 @@ class FieldUpload extends Field implements ExportableFieldInterface, ImportableF
             $abs_path,
             $data['name'],
             $data['tmp_name'],
-            Symphony::Configuration()->get('write_mode', 'file')
+            Symphony::get('Configuration')->get('write_mode', 'file')
         );
 
         if ($uploaded === false) {

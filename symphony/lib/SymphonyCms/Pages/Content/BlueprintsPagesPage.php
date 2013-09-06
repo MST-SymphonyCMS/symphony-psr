@@ -42,7 +42,7 @@ class BlueprintsPagesPage extends AdministrationPage
                     PageManager::fetchTitleFromHandle($page),
                     SYMPHONY_URL . '/blueprints/pages/edit/' . PageManager::fetchIDFromHandle($page) . '/'
                 );
-            } elseif (Symphony::Configuration()->get('pages_table_nest_children', 'symphony') == 'yes') {
+            } elseif (Symphony::get('Configuration')->get('pages_table_nest_children', 'symphony') == 'yes') {
                 // If the pages index is nested, the Breadcrumb should link to the
                 // Pages Index filtered by parent
                 $page = Widget::Anchor(
@@ -91,7 +91,7 @@ class BlueprintsPagesPage extends AdministrationPage
         $this->setPageType('table');
         $this->setTitle(tr('%1$s &ndash; %2$s', array(tr('Pages'), tr('Symphony'))));
 
-        $nesting = (Symphony::Configuration()->get('pages_table_nest_children', 'symphony') == 'yes');
+        $nesting = (Symphony::get('Configuration')->get('pages_table_nest_children', 'symphony') == 'yes');
 
         if ($nesting == true && isset($_GET['parent']) && is_numeric($_GET['parent'])) {
             $parent = PageManager::fetchPageByID((int)$_GET['parent'], array('title', 'id'));
@@ -101,7 +101,7 @@ class BlueprintsPagesPage extends AdministrationPage
             isset($parent) ? $parent['title'] : tr('Pages'),
             Widget::Anchor(
                 tr('Create New'),
-                Administration::instance()->getCurrentPageURL() . 'new/' . ($nesting == true && isset($parent) ? "?parent={$parent['id']}" : null
+                Symphony::get('Engine')->getCurrentPageURL() . 'new/' . ($nesting == true && isset($parent) ? "?parent={$parent['id']}" : null
                 ),
                 tr('Create a new page'),
                 'create button',
@@ -155,9 +155,9 @@ class BlueprintsPagesPage extends AdministrationPage
 
                 $page_title = ($nesting == true ? $page['title'] : PageManager::resolvePageTitle($page['id']));
                 $page_url = URL . '/' . PageManager::resolvePagePath($page['id']) . '/';
-                $page_edit_url = Administration::instance()->getCurrentPageURL() . 'edit/' . $page['id'] . '/';
+                $page_edit_url = Symphony::get('Engine')->getCurrentPageURL() . 'edit/' . $page['id'] . '/';
                 $page_template = PageManager::createFilePath($page['path'], $page['handle']);
-                $page_template_url = Administration::instance()->getCurrentPageURL() . 'template/' . $page_template . '/';
+                $page_template_url = Symphony::get('Engine')->getCurrentPageURL() . 'template/' . $page_template . '/';
 
                 $col_title = Widget::TableData(
                     Widget::Anchor(
@@ -252,7 +252,7 @@ class BlueprintsPagesPage extends AdministrationPage
          *  in the With Selected menu. Options should follow the same format
          *  expected by `Widget::selectBuildOption`. Passed by reference.
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'AddCustomActions',
             '/blueprints/pages/',
             array(
@@ -409,7 +409,7 @@ class BlueprintsPagesPage extends AdministrationPage
         $fields = array("title"=>null, "handle"=>null, "parent"=>null, "params"=>null, "type"=>null, "data_sources"=>null);
         $existing = $fields;
 
-        $nesting = (Symphony::Configuration()->get('pages_table_nest_children', 'symphony') == 'yes');
+        $nesting = (Symphony::get('Configuration')->get('pages_table_nest_children', 'symphony') == 'yes');
 
         // Verify page exists:
         if ($this->_context[0] == 'edit') {
@@ -420,7 +420,7 @@ class BlueprintsPagesPage extends AdministrationPage
             $existing = PageManager::fetchPageByID($page_id);
 
             if (!$existing) {
-                Administration::instance()->errorPageNotFound();
+                Symphony::get('Engine')->errorPageNotFound();
             } else {
                 $existing['type'] = PageManager::fetchPageTypes($page_id);
             }
@@ -579,12 +579,6 @@ class BlueprintsPagesPage extends AdministrationPage
         );
 
         if (!empty($pages)) {
-            if (!function_exists('compare_pages')) {
-                function compare_pages($a, $b) {
-                    return strnatcasecmp($a[2], $b[2]);
-                }
-            }
-
             foreach ($pages as $page) {
                 $options[] = array(
                     $page['id'], $fields['parent'] == $page['id'],
@@ -711,7 +705,7 @@ class BlueprintsPagesPage extends AdministrationPage
          * @param array $fields
          * @param array $errors
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'AppendPageContent',
             '/blueprints/pages/',
             array(
@@ -763,7 +757,7 @@ class BlueprintsPagesPage extends AdministrationPage
              *  An array of the selected rows. The value is usually the ID of the
              *  the associated object.
              */
-            Symphony::ExtensionManager()->notifyMembers(
+            Symphony::get('ExtensionManager')->notifyMembers(
                 'CustomActions',
                 '/blueprints/pages/',
                 array(
@@ -805,7 +799,7 @@ class BlueprintsPagesPage extends AdministrationPage
              * @param string $contents
              *  The contents of the `$fields['body']`, passed by reference
              */
-            Symphony::ExtensionManager()->notifyMembers('PageTemplatePreEdit', '/blueprints/pages/template/', array('file' => $file_abs, 'contents' => &$fields['body']));
+            Symphony::get('ExtensionManager')->notifyMembers('PageTemplatePreEdit', '/blueprints/pages/template/', array('file' => $file_abs, 'contents' => &$fields['body']));
 
             if (!PageManager::writePageFiles($file_abs, $fields['body'])) {
                 $this->pageAlert(
@@ -825,7 +819,7 @@ class BlueprintsPagesPage extends AdministrationPage
                  * @param string $file
                  *  The path to the Page Template file
                  */
-                Symphony::ExtensionManager()->notifyMembers('PageTemplatePostEdit', '/blueprints/pages/template/', array('file' => $file_abs));
+                Symphony::get('ExtensionManager')->notifyMembers('PageTemplatePostEdit', '/blueprints/pages/template/', array('file' => $file_abs));
 
                 SymphonyCmsTILITIESREDIRECT(SYMPHONY_URL . '/blueprints/pages/template/' . $this->_context[1] . '/saved/');
             }
@@ -900,7 +894,7 @@ class BlueprintsPagesPage extends AdministrationPage
              *  `$fields` array, and the value being the string of the error. `$errors`
              *  is passed by reference.
              */
-            Symphony::ExtensionManager()->notifyMembers('PagePostValidate', '/blueprints/pages/', array('fields' => $fields, 'errors' => &$errors));
+            Symphony::get('ExtensionManager')->notifyMembers('PagePostValidate', '/blueprints/pages/', array('fields' => $fields, 'errors' => &$errors));
 
             if (empty($this->_errors)) {
 
@@ -992,7 +986,7 @@ class BlueprintsPagesPage extends AdministrationPage
                          * @param array $fields
                          *  The `$_POST['fields']` array passed by reference
                          */
-                        Symphony::ExtensionManager()->notifyMembers('PagePreCreate', '/blueprints/pages/', array('fields' => &$fields));
+                        Symphony::get('ExtensionManager')->notifyMembers('PagePreCreate', '/blueprints/pages/', array('fields' => &$fields));
 
                         if (!$page_id = PageManager::add($fields)) {
                             $this->pageAlert(
@@ -1015,7 +1009,7 @@ class BlueprintsPagesPage extends AdministrationPage
                              * @param array $fields
                              *  An associative array of data that was just saved for this page
                              */
-                            Symphony::ExtensionManager()->notifyMembers('PagePostCreate', '/blueprints/pages/', array('page_id' => $page_id, 'fields' => &$fields));
+                            Symphony::get('ExtensionManager')->notifyMembers('PagePostCreate', '/blueprints/pages/', array('page_id' => $page_id, 'fields' => &$fields));
 
                             $redirect = "/blueprints/pages/edit/{$page_id}/created/{$parent_link_suffix}";
                         }
@@ -1037,7 +1031,7 @@ class BlueprintsPagesPage extends AdministrationPage
                          * @param array $fields
                          *  The `$_POST['fields']` array passed by reference
                          */
-                        Symphony::ExtensionManager()->notifyMembers('PagePreEdit', '/blueprints/pages/', array('page_id' => $page_id, 'fields' => &$fields));
+                        Symphony::get('ExtensionManager')->notifyMembers('PagePreEdit', '/blueprints/pages/', array('page_id' => $page_id, 'fields' => &$fields));
 
                         if (!PageManager::edit($page_id, $fields, true)) {
                             return $this->pageAlert(
@@ -1061,7 +1055,7 @@ class BlueprintsPagesPage extends AdministrationPage
                              * @param array $fields
                              *  An associative array of data that was just saved for this page
                              */
-                            Symphony::ExtensionManager()->notifyMembers('PagePostEdit', '/blueprints/pages/', array('page_id' => $page_id, 'fields' => $fields));
+                            Symphony::get('ExtensionManager')->notifyMembers('PagePostEdit', '/blueprints/pages/', array('page_id' => $page_id, 'fields' => $fields));
 
                             $redirect = "/blueprints/pages/edit/{$page_id}/saved/{$parent_link_suffix}";
                         }
@@ -1087,7 +1081,7 @@ class BlueprintsPagesPage extends AdministrationPage
                      * @param array $types
                      *  An associative array of the types for this page passed by reference.
                      */
-                    Symphony::ExtensionManager()->notifyMembers('PageTypePreCreate', '/blueprints/pages/', array('page_id' => $page_id, 'types' => &$types));
+                    Symphony::get('ExtensionManager')->notifyMembers('PageTypePreCreate', '/blueprints/pages/', array('page_id' => $page_id, 'types' => &$types));
 
                     // Assign page types:
                     PageManager::addPageTypesToPage($page_id, $types);
@@ -1137,7 +1131,7 @@ class BlueprintsPagesPage extends AdministrationPage
          *  The absolute path that the Developer will be redirected to
          *  after the Pages are deleted
          */
-        Symphony::ExtensionManager()->notifyMembers('PagePreDelete', '/blueprints/pages/', array('page_ids' => &$pages, 'redirect' => &$redirect));
+        Symphony::get('ExtensionManager')->notifyMembers('PagePreDelete', '/blueprints/pages/', array('page_ids' => &$pages, 'redirect' => &$redirect));
 
         foreach ($pages as $page_id) {
             $page = PageManager::fetchPageByID($page_id);
@@ -1191,7 +1185,7 @@ class BlueprintsPagesPage extends AdministrationPage
              * @param array $page_ids
              *  The page ID's that were just deleted
              */
-            Symphony::ExtensionManager()->notifyMembers('PagePostDelete', '/blueprints/pages/', array('page_ids' => $deleted_page_ids));
+            Symphony::get('ExtensionManager')->notifyMembers('PagePostDelete', '/blueprints/pages/', array('page_ids' => $deleted_page_ids));
             redirect($redirect);
         }
     }

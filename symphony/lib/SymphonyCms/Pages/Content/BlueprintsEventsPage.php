@@ -30,7 +30,7 @@ class BlueprintsEventsPage extends ResourcesPage
         parent::viewIndex(RESOURCE_TYPE_EVENT);
 
         $this->setTitle(tr('%1$s &ndash; %2$s', array(tr('Events'), tr('Symphony'))));
-        $this->appendSubheading(tr('Events'), Widget::Anchor(tr('Create New'), Administration::instance()->getCurrentPageURL().'new/', tr('Create a new event'), 'create button', null, array('accesskey' => 'c')));
+        $this->appendSubheading(tr('Events'), Widget::Anchor(tr('Create New'), Symphony::get('Engine')->getCurrentPageURL().'new/', tr('Create a new event'), 'create button', null, array('accesskey' => 'c')));
     }
 
     public function viewNew()
@@ -87,7 +87,7 @@ class BlueprintsEventsPage extends ResourcesPage
         $isEditing = ($readonly ? true : false);
         $fields = array("name"=>null, "filters"=>null);
         $about = array("name"=>null);
-        $providers = Symphony::ExtensionManager()->getProvidersOf(ProviderInterface::EVENT);
+        $providers = Symphony::get('ExtensionManager')->getProvidersOf(ProviderInterface::EVENT);
 
         if (isset($_POST['fields'])) {
             $fields = $_POST['fields'];
@@ -242,7 +242,7 @@ class BlueprintsEventsPage extends ResourcesPage
              * @param array $options
              *  An array of all the filters that are available, passed by reference
              */
-            Symphony::ExtensionManager()->notifyMembers('AppendEventFilter', '/blueprints/events/' . $this->_context[0] . '/', array(
+            Symphony::get('ExtensionManager')->notifyMembers('AppendEventFilter', '/blueprints/events/' . $this->_context[0] . '/', array(
                 'selected' => $filters,
                 'options' => &$options
             ));
@@ -360,7 +360,7 @@ class BlueprintsEventsPage extends ResourcesPage
              * @param string $file
              *  The path to the Event file
              */
-            Symphony::ExtensionManager()->notifyMembers('EventPreDelete', '/blueprints/events/', array('file' => EVENTS . "/event." . $this->_context[1] . ".php"));
+            Symphony::get('ExtensionManager')->notifyMembers('EventPreDelete', '/blueprints/events/', array('file' => EVENTS . "/event." . $this->_context[1] . ".php"));
 
             if (!General::deleteFile(EVENTS . '/event.' . $this->_context[1] . '.php')) {
                 $this->pageAlert(
@@ -388,7 +388,7 @@ class BlueprintsEventsPage extends ResourcesPage
     {
         $fields = $_POST['fields'];
         $this->_errors = array();
-        $providers = Symphony::ExtensionManager()->getProvidersOf(ProviderInterface::EVENT);
+        $providers = Symphony::get('ExtensionManager')->getProvidersOf(ProviderInterface::EVENT);
         $providerClass = null;
 
         if (trim($fields['name']) == '') {
@@ -451,11 +451,11 @@ class BlueprintsEventsPage extends ResourcesPage
             );
             $about = array(
                 'name' => $fields['name'],
-                'version' => 'Symphony ' . Symphony::Configuration()->get('version', 'symphony'),
+                'version' => 'Symphony ' . Symphony::get('Configuration')->get('version', 'symphony'),
                 'release date' => DateTimeObj::getGMT('c'),
-                'author name' => Administration::instance()->Author->getFullName(),
+                'author name' => Symphony::get('Author')->getFullName(),
                 'author website' => URL,
-                'author email' => Administration::instance()->Author->get('email')
+                'author email' => Symphony::get('Author')->get('email')
             );
 
             // If there is a provider, get their template
@@ -531,7 +531,7 @@ class BlueprintsEventsPage extends ResourcesPage
                 $documentation_parts[] = new XMLElement('h3', tr('Example Front-end Form Markup'));
                 $documentation_parts[] = new XMLElement('p', tr('This is an example of the form markup you can use on your frontend:'));
                 $container = new XMLElement('form', null, array('method' => 'post', 'action' => '', 'enctype' => 'multipart/form-data'));
-                $container->appendChild(Widget::Input('MAX_FILE_SIZE', (string)min(iniSizeToBytes(ini_get('upload_max_filesize')), Symphony::Configuration()->get('max_upload_size', 'admin')), 'hidden'));
+                $container->appendChild(Widget::Input('MAX_FILE_SIZE', (string)min(iniSizeToBytes(ini_get('upload_max_filesize')), Symphony::get('Configuration')->get('max_upload_size', 'admin')), 'hidden'));
 
                 if (is_numeric($fields['source'])) {
                     $section = SectionManager::fetch($fields['source']);
@@ -609,7 +609,7 @@ class BlueprintsEventsPage extends ResourcesPage
                  * @param array $documentation
                  *  An array of all the documentation XMLElements, passed by reference
                  */
-                Symphony::ExtensionManager()->notifyMembers(
+                Symphony::get('ExtensionManager')->notifyMembers(
                     'AppendEventFilterDocumentation',
                     '/blueprints/events/' . $this->_context[0] . '/',
                     array(
@@ -648,7 +648,7 @@ class BlueprintsEventsPage extends ResourcesPage
                  * @param array $filters
                  *  An array of the filters attached to this event
                  */
-                Symphony::ExtensionManager()->notifyMembers(
+                Symphony::get('ExtensionManager')->notifyMembers(
                     'EventPreCreate',
                     '/blueprints/events/',
                     array(
@@ -673,7 +673,7 @@ class BlueprintsEventsPage extends ResourcesPage
                  * @param array $filters
                  *  An array of the filters attached to this event
                  */
-                Symphony::ExtensionManager()->notifyMembers(
+                Symphony::get('ExtensionManager')->notifyMembers(
                     'EventPreEdit',
                     '/blueprints/events/',
                     array(
@@ -685,7 +685,7 @@ class BlueprintsEventsPage extends ResourcesPage
             }
 
             // Write the file
-            if (!is_writable(dirname($file)) || !$write = General::writeFile($file, $eventShell, Symphony::Configuration()->get('write_mode', 'file'))) {
+            if (!is_writable(dirname($file)) || !$write = General::writeFile($file, $eventShell, Symphony::get('Configuration')->get('write_mode', 'file'))) {
                 $this->pageAlert(
                     tr('Failed to write Event to disk.')
                     . ' ' . tr('Please check permissions on %s.', array('<code>/workspace/events</code>'))
@@ -721,7 +721,7 @@ class BlueprintsEventsPage extends ResourcesPage
                      * @param string $file
                      *  The path to the Event file
                      */
-                    Symphony::ExtensionManager()->notifyMembers(
+                    Symphony::get('ExtensionManager')->notifyMembers(
                         'EventPostCreate',
                         '/blueprints/events/',
                         array(
@@ -743,7 +743,7 @@ class BlueprintsEventsPage extends ResourcesPage
                      *  have been renamed. To get the handle from this value, see
                      *  `EventManager::getHandleFromFilename`
                      */
-                    Symphony::ExtensionManager()->notifyMembers(
+                    Symphony::get('ExtensionManager')->notifyMembers(
                         'EventPostEdit',
                         '/blueprints/events/',
                         array(

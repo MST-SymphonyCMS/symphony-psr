@@ -36,7 +36,7 @@ class SendmailGateway extends EmailGateway
     public function __construct()
     {
         parent::__construct();
-        $this->setConfiguration(Symphony::Configuration()->get('emailsendmail'));
+        $this->setConfiguration(Symphony::get('Configuration')->get('emailsendmail'));
     }
 
     /**

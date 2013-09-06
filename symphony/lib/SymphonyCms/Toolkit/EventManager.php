@@ -60,7 +60,7 @@ class EventManager implements FileResourceInterface
         if (is_file(EVENTS . "/$handle.php")) {
             return EVENTS;
         } else {
-            $extensions = Symphony::ExtensionManager()->listInstalledHandles();
+            $extensions = Symphony::get('ExtensionManager')->listInstalledHandles();
 
             if (is_array($extensions) && !empty($extensions)) {
                 foreach ($extensions as $e) {
@@ -134,7 +134,7 @@ class EventManager implements FileResourceInterface
             }
         }
 
-        $extensions = Symphony::ExtensionManager()->listInstalledHandles();
+        $extensions = Symphony::get('ExtensionManager')->listInstalledHandles();
 
         if (is_array($extensions) && !empty($extensions)) {
             foreach ($extensions as $e) {

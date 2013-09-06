@@ -421,7 +421,7 @@ abstract class SectionEvent extends Event
          *  If editing an entry, this parameter will be an integer,
          *  otherwise null.
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'EventPreSaveFilter',
             '/frontend/',
             array(
@@ -491,7 +491,7 @@ abstract class SectionEvent extends Event
          *  the message (string) an optionally an associative array
          *  of additional attributes to add to the filter element.
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'EventPostSaveFilter',
             '/frontend/',
             array(
@@ -554,7 +554,7 @@ abstract class SectionEvent extends Event
          *  of additional attributes to add to the filter element.
          * @param Entry $entry
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'EventFinalSaveFilter',
             '/frontend/',
             array(
@@ -604,7 +604,7 @@ abstract class SectionEvent extends Event
         $fields['recipient'] = preg_split('/\,/i', $fields['recipient'], -1, PREG_SPLIT_NO_EMPTY);
         $fields['recipient'] = array_map('trim', $fields['recipient']);
 
-        $fields['subject'] = self::replaceFieldToken($send_email['subject'], $fields, tr('[Symphony] A new entry was created on %s', array(Symphony::Configuration()->get('sitename', 'general'))));
+        $fields['subject'] = self::replaceFieldToken($send_email['subject'], $fields, tr('[Symphony] A new entry was created on %s', array(Symphony::get('Configuration')->get('sitename', 'general'))));
         $fields['body'] = self::replaceFieldToken($send_email['body'], $fields, null, false, false);
         $fields['sender-email'] = self::replaceFieldToken($send_email['sender-email'], $fields);
         $fields['sender-name'] = self::replaceFieldToken($send_email['sender-name'], $fields);
@@ -613,7 +613,7 @@ abstract class SectionEvent extends Event
         $fields['reply-to-email'] = self::replaceFieldToken($send_email['reply-to-email'], $fields);
 
         $edit_link = SYMPHONY_URL . '/publish/' . $section->get('handle') . '/edit/' . $entry->get('id').'/';
-        $language = Symphony::Configuration()->get('lang', 'symphony');
+        $language = Symphony::get('Configuration')->get('lang', 'symphony');
         $template_path = Event::getNotificationTemplate($language);
         $body = sprintf(file_get_contents($template_path), $section->get('name'), $edit_link);
 

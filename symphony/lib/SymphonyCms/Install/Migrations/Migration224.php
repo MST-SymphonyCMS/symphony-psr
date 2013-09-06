@@ -46,9 +46,9 @@ class Migration224 extends Migration
 
     public static function upgrade()
     {
-        Symphony::Configuration()->set('version', '2.2.4', 'symphony');
+        Symphony::get('Configuration')->set('version', '2.2.4', 'symphony');
 
-        if (Symphony::Configuration()->write() === false) {
+        if (Symphony::get('Configuration')->write() === false) {
             throw new Exception('Failed to write configuration file, please check the file permissions.');
         } else {
             return true;

@@ -323,8 +323,8 @@ class Lang
         $enabled_extensions = array();
 
         // Fetch list of active extensions
-        if (class_exists('Symphony') && (!is_null(Symphony::ExtensionManager()))) {
-            $enabled_extensions = Symphony::ExtensionManager()->listInstalledHandles();
+        if (class_exists('Symphony') && (!is_null(Symphony::get('ExtensionManager')))) {
+            $enabled_extensions = Symphony::get('ExtensionManager')->listInstalledHandles();
         }
 
         return in_array('lang_' . $handle, $enabled_extensions);
@@ -482,7 +482,7 @@ class Lang
             // This is important, otherwise the `DateTime` constructor may break
             // @todo Test if this separator is still required. It's a hidden setting
             // and users are only aware of it if they go digging/pointed in the right direction
-            $separator = Symphony::Configuration()->get('datetime_separator', 'region');
+            $separator = Symphony::get('Configuration')->get('datetime_separator', 'region');
 
             if ($separator != ' ') {
                 $string = str_replace($separator, ' ', $string);

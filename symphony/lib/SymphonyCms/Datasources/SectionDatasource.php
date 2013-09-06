@@ -529,7 +529,7 @@ class SectionDatasource extends Datasource
          * @param array $entries
          * @param array $filters
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'DataSourceEntriesBuilt',
             '/frontend/',
             array(

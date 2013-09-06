@@ -6,7 +6,7 @@ use \Exception;
 use \SymphonyCms\Symphony;
 use \SymphonyCms\Exceptions\GenericExceptionHandler;
 use \SymphonyCms\Exceptions\DatabaseException;
-use \SymphonyCms\Toolkit\ExtensionManager;
+use \SymphonyCms\Extensions\ExtensionManager;
 
 /**
  * The MySQL class acts as a wrapper for connecting to the Database
@@ -225,7 +225,7 @@ class MySQL
      */
     public function connect($host = null, $user = null, $password = null, $port = '3306', $database = null)
     {
-        MySQL::$connection = array(
+        self::$connection = array(
             'host' => $host,
             'user' => $user,
             'pass' => $password,
@@ -234,13 +234,13 @@ class MySQL
         );
 
         try {
-            MySQL::$connection['id'] = mysql_connect(
-                MySQL::$connection['host'] . ":" . MySQL::$connection['port'],
-                MySQL::$connection['user'],
-                MySQL::$connection['pass']
+            self::$connection['id'] = mysql_connect(
+                self::$connection['host'] . ":" . self::$connection['port'],
+                self::$connection['user'],
+                self::$connection['pass']
             );
 
-            if (!$this->isConnected() || (!is_null($database) && !mysql_select_db(MySQL::$connection['database'], MySQL::$connection['id']))) {
+            if (!$this->isConnected() || (!is_null($database) && !mysql_select_db(self::$connection['database'], self::$connection['id']))) {
                 $this->error();
             }
         } catch (Exception $ex) {
@@ -260,7 +260,7 @@ class MySQL
      */
     public static function getConnectionResource()
     {
-        return MySQL::$connection['id'];
+        return self::$connection['id'];
     }
 
     /**
@@ -276,12 +276,12 @@ class MySQL
     public function select($db = null)
     {
         if ($db) {
-            MySQL::$connection['database'] = $db;
+            self::$connection['database'] = $db;
         }
 
-        if (!mysql_select_db(MySQL::$connection['database'], MySQL::$connection['id'])) {
+        if (!mysql_select_db(self::$connection['database'], self::$connection['id'])) {
             $this->error();
-            MySQL::$connection['database'] = null;
+            self::$connection['database'] = null;
             return false;
         }
 
@@ -300,7 +300,7 @@ class MySQL
      */
     public function setCharacterEncoding($set = 'utf8')
     {
-        mysql_set_charset($set, MySQL::$connection['id']);
+        mysql_set_charset($set, self::$connection['id']);
     }
 
     /**
@@ -395,7 +395,7 @@ class MySQL
      */
     public function determineQueryType($query)
     {
-        return (preg_match('/^(create|insert|replace|alter|delete|update|optimize|truncate|drop)/i', $query) ? MySQL::__WRITE_OPERATION__ : MySQL::__READ_OPERATION__);
+        return (preg_match('/^(create|insert|replace|alter|delete|update|optimize|truncate|drop)/i', $query) ? self::__WRITE_OPERATION__ : self::__READ_OPERATION__);
     }
 
     /**
@@ -427,14 +427,14 @@ class MySQL
         $query_type = $this->determineQueryType($query);
         $query_hash = md5($query.$start);
 
-        if (MySQL::$connection['tbl_prefix'] != 'tbl_') {
-            $query = preg_replace('/tbl_(\S+?)([\s\.,]|$)/', MySQL::$connection['tbl_prefix'].'\\1\\2', $query);
+        if (self::$connection['tbl_prefix'] != 'tbl_') {
+            $query = preg_replace('/tbl_(\S+?)([\s\.,]|$)/', self::$connection['tbl_prefix'].'\\1\\2', $query);
         }
 
         // TYPE is deprecated since MySQL 4.0.18, ENGINE is preferred
-        if ($query_type == MySQL::__WRITE_OPERATION__) {
+        if ($query_type == self::__WRITE_OPERATION__) {
             $query = preg_replace('/TYPE=(MyISAM|InnoDB)/i', 'ENGINE=$1', $query);
-        } elseif ($query_type == MySQL::__READ_OPERATION__ && !preg_match('/^SELECT\s+SQL(_NO)?_CACHE/i', $query)) {
+        } elseif ($query_type == self::__READ_OPERATION__ && !preg_match('/^SELECT\s+SQL(_NO)?_CACHE/i', $query)) {
             if ($this->isCachingEnabled()) {
                 $query = preg_replace('/^SELECT\s+/i', 'SELECT SQL_CACHE ', $query);
             } else {
@@ -445,8 +445,8 @@ class MySQL
         $this->flush();
         $this->_lastQuery = $query;
         $this->_lastQueryHash = $query_hash;
-        $this->_result = mysql_query($query, MySQL::$connection['id']);
-        $this->_lastInsertID = mysql_insert_id(MySQL::$connection['id']);
+        $this->_result = mysql_query($query, self::$connection['id']);
+        $this->_lastInsertID = mysql_insert_id(self::$connection['id']);
 
         self::$_query_count++;
 
@@ -488,10 +488,10 @@ class MySQL
          * @param float $execution_time
          *  The time that it took to run `$query`
          */
-        if (Symphony::ExtensionManager() instanceof ExtensionManager) {
-            Symphony::ExtensionManager()->notifyMembers(
+        if ($extensionmanager = Symphony::has('ExtensionManager') and $extensionmanager instanceof ExtensionManager) {
+            Symphony::get('ExtensionManager')->notifyMembers(
                 'PostQueryExecution',
-                (class_exists('Administration') ? '/backend/' : '/frontend/'),
+                (Symphony::get('mode_class') === '\\SymphonyCms\\Symphony\\Administration' ? '/backend/' : '/frontend/'),
                 array(
                     'query' => $query,
                     'query_hash' => $query_hash,
@@ -805,8 +805,8 @@ class MySQL
          * @param integer $num
          *  The error number that corresponds with the MySQL error message
          */
-        if (Symphony::ExtensionManager() instanceof ExtensionManager) {
-            Symphony::ExtensionManager()->notifyMembers(
+        if (Symphony::has('ExtensionManager')) {
+            Symphony::get('ExtensionManager')->notifyMembers(
                 'QueryExecutionError',
                 (class_exists('Administration') ? '/backend/' : '/frontend/'),
                 array(
@@ -873,7 +873,7 @@ class MySQL
         }
 
         return array(
-            'queries' => MySQL::queryCount(),
+            'queries' => self::queryCount(),
             'slow-queries' => $slow_queries,
             'total-query-time' => number_format($query_timer, 4, '.', '')
         );

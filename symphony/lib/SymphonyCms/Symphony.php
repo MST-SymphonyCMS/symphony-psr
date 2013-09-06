@@ -6,16 +6,15 @@ use \DateTime;
 use \DateTimeZone;
 use \DirectoryIterator;
 use \Exception;
+use \ReflectionClass;
 use \StdClass;
 
-use \Manneken\Container\Container;
+use \Manneken\Container\StaticContainer;
 
 use \SymphonyCms\Exceptions\DatabaseException;
 use \SymphonyCms\Exceptions\GenericErrorHandler;
 use \SymphonyCms\Exceptions\GenericExceptionHandler;
 use \SymphonyCms\Exceptions\SymphonyErrorPage;
-
-use \SymphonyCms\Interfaces\SingletonInterface;
 
 use \SymphonyCms\Symphony\Administration;
 use \SymphonyCms\Symphony\Configuration;
@@ -26,7 +25,7 @@ use \SymphonyCms\Symphony\Log;
 
 use \SymphonyCms\Toolkit\AuthorManager;
 use \SymphonyCms\Toolkit\Cryptography;
-use \SymphonyCms\Toolkit\ExtensionManager;
+use \SymphonyCms\Extensions\ExtensionManager;
 use \SymphonyCms\Toolkit\Lang;
 use \SymphonyCms\Toolkit\MySQL;
 use \SymphonyCms\Toolkit\Page;
@@ -65,16 +64,13 @@ class Symphony extends StaticContainer
      */
     public static function initialise()
     {
-        $classes = include MANIFEST.'/config_classes.php';
-
-        foreach ($classes as $key => $class) {
-            self::set($key, $class);
-        }
-
         self::initialiseProfiler();
+        self::initialiseEngine();
         self::initialiseConfiguration();
 
-        DateTimeObj::setSettings(self::get('Configuration')->get('region'));
+        $configuration = self::get('Configuration');
+
+        DateTimeObj::setSettings($configuration->get('region'));
 
         // Initialize language management
         Lang::initialize();
@@ -88,6 +84,8 @@ class Symphony extends StaticContainer
         self::initialiseDatabase();
         self::initialiseCookie();
 
+        self::get('ExtensionManager')->getSubscriptions();
+
         // If the user is not a logged in Author, turn off the verbose error messages.
         if (!self::isLoggedIn() && !self::has('Author')) {
             GenericExceptionHandler::$enabled = false;
@@ -99,19 +97,33 @@ class Symphony extends StaticContainer
 
     /**
      * Initialise an instance of the `Profiler` into the Symphony container
-     * @return [type] [description]
      */
     public static function initialiseProfiler()
     {
         self::singleton(
             'Profiler',
             function ($con) {
-                $class = $con::get('profiler_class');
+                $class = $con->get('profiler_class');
                 return new $class;
             }
         );
 
         self::get('Profiler')->sample('Engine Initialisation');
+    }
+
+    /**
+     * Initialise an instance of either `Frontend` or `Administration` into the Symphony container
+     */
+    public static function initialiseEngine()
+    {
+        self::singleton(
+            'Engine',
+            function ($con) {
+                $class = $con->get('mode_class');
+
+                return new $class;
+            }
+        );
     }
 
     /**
@@ -130,11 +142,12 @@ class Symphony extends StaticContainer
         self::singleton(
             'Configuration',
             function ($con) use ($data) {
-                $class = $con::get('configuration_class');
+                $class = $con->get('configuration_class');
 
-                return new $class(true);
+                $configuration = new $class(true);
+                $configuration->setArray($data);
 
-                $class->setArray($data);
+                return $configuration;
             }
         );
     }
@@ -165,7 +178,7 @@ class Symphony extends StaticContainer
             self::singleton(
                 'Log',
                 function ($con) use ($filename) {
-                    $class = $con::get('log_class');
+                    $class = $con->get('log_class');
 
                     return new $class($filename);
                 }
@@ -193,7 +206,7 @@ class Symphony extends StaticContainer
             self::singleton(
                 'ExtensionManager',
                 function ($con) {
-                    $class = $con::get('extension_manager_class');
+                    $class = $con->get('extension_manager_class');
 
                     return new $class;
                 }
@@ -268,7 +281,7 @@ class Symphony extends StaticContainer
     }
 
     /**
-     * Setter for `$Database`, accepts a Database object. If `$database`
+     * Setter for `Database`, accepts a Database object. If `$database`
      * is omitted, this function will set `$Database` to be of the `MySQL`
      * class.
      *
@@ -279,11 +292,11 @@ class Symphony extends StaticContainer
      */
     public static function setDatabase(StdClass $database = null)
     {
-        if (self::has('Database')) {
+        if (!self::has('Database')) {
             self::singleton(
                 'Database',
                 function ($con) use ($database) {
-                    $class = (is_null($database) ? $con::get('database_class') : $database);
+                    $class = (is_null($database) ? $con->get('database_class') : $database);
 
                     return new $class;
                 }
@@ -292,7 +305,7 @@ class Symphony extends StaticContainer
     }
 
     /**
-     * Setter for `$Cookie`. This will use PHP's parse_url
+     * Setter for `Cookie`. This will use PHP's parse_url
      * function on the current URL to set a cookie using the cookie_prefix
      * defined in the Symphony configuration. The cookie will last two
      * weeks.
@@ -314,84 +327,12 @@ class Symphony extends StaticContainer
             self::singleton(
                 'Cookie',
                 function ($con) {
-                    $class = $con::get('cookie_class');
+                    $class = $con->get('cookie_class');
 
                     return new $class(__SYM_COOKIE_PREFIX__, TWO_WEEKS, __SYM_COOKIE_PATH__);
                 }
             );
         }
-    }
-
-    /**
-    * Accessor for the Symphony instance, whether it be Frontend
-    * or Administration
-    *
-    * @since Symphony 2.2
-    * @return Symphony
-    */
-    public static function Engine()
-    {
-        if (class_exists('\\SymphonyCms\\Symphony\\Administration')) {
-            return Administration::instance();
-        } elseif (class_exists('\\SymphonyCms\\Symphony\\Frontend')) {
-            return Frontend::instance();
-        } else {
-            throw new Exception(tr('No suitable engine object found'));
-        }
-    }
-
-    /**
-     * Accessor for the current `Configuration` instance. This contains
-     * representation of the the Symphony config file.
-     *
-     * @return Configuration
-     */
-    public static function Configuration()
-    {
-        return self::get('Configuration');
-    }
-
-    /**
-     * Accessor for the current `Profiler` instance.
-     *
-     * @since Symphony 2.3
-     * @return Profiler
-     */
-    public static function Profiler()
-    {
-        return self::get('Profiler');
-    }
-
-    /**
-     * Accessor for the current `Log` instance
-     *
-     * @since Symphony 2.3
-     * @return Log
-     */
-    public static function Log()
-    {
-        return self::get('Log');
-    }
-
-    /**
-     * Accessor for the current `$ExtensionManager` instance.
-     *
-     * @since Symphony 2.2
-     * @return ExtensionManager
-     */
-    public static function ExtensionManager()
-    {
-        return self::get('ExtensionManager');
-    }
-
-    /**
-     * Accessor for the current `$Database` instance.
-     *
-     * @return MySQL
-     */
-    public static function Database()
-    {
-        return self::get('Database');
     }
 
     /**
@@ -673,7 +614,7 @@ class Symphony extends StaticContainer
     public static function isUpgradeAvailable()
     {
         if (self::isInstallerAvailable()) {
-            $migration_version = $this->getMigrationVersion();
+            $migration_version = self::getMigrationVersion();
             $current_version = self::get('Configuration')->get('version', 'symphony');
             return version_compare($current_version, $migration_version, '<');
         } else {

@@ -39,7 +39,7 @@ class PublishPage extends AdministrationPage
             $section->setSortingField($section->getDefaultSortingField(), false);
             $section->setSortingOrder('asc');
 
-            redirect(Administration::instance()-getCurrentPageURL());
+            redirect(Symphony::get('Engine')-getCurrentPageURL());
         }
 
         // By default, sorting information are retrieved from
@@ -67,7 +67,7 @@ class PublishPage extends AdministrationPage
                     $params['filters'] = '?' . trim($params['filters'], '&amp;');
                 }
 
-                redirect(Administration::instance()->getCurrentPageURL() . $params['filters']);
+                redirect(Symphony::get('Engine')->getCurrentPageURL() . $params['filters']);
             }
         }
 
@@ -88,7 +88,7 @@ class PublishPage extends AdministrationPage
                 return;
             }
 
-            Administration::instance()->errorPageNotFound();
+            Symphony::get('Engine')->errorPageNotFound();
         }
 
         $this->$function();
@@ -102,7 +102,7 @@ class PublishPage extends AdministrationPage
     public function viewIndex()
     {
         if (!$section_id = SectionManager::fetchIDFromHandle($this->_context['section_handle'])) {
-            Administration::instance()->throwCustomError(
+            Symphony::get('Engine')->throwCustomError(
                 tr('The Section, %s, could not be found.', array('<code>' . $this->_context['section_handle'] . '</code>')),
                 tr('Unknown Section'),
                 Page::HTTP_STATUS_NOT_FOUND
@@ -130,7 +130,7 @@ class PublishPage extends AdministrationPage
 
             foreach ($filters as $handle => $value) {
                 $field_id = FieldManager::fetchFieldIDFromElementName(
-                    Symphony::Database()->cleanValue($handle),
+                    Symphony::get('Database')->cleanValue($handle),
                     $section->get('id')
                 );
 
@@ -163,14 +163,14 @@ class PublishPage extends AdministrationPage
             )
         );
 
-        $this->Form->setAttribute('action', Administration::instance()->getCurrentPageURL(). '?pg=' . $current_page.($filter_querystring ? "&amp;" . $filter_querystring : ''));
+        $this->Form->setAttribute('action', Symphony::get('Engine')->getCurrentPageURL(). '?pg=' . $current_page.($filter_querystring ? "&amp;" . $filter_querystring : ''));
 
         $subheading_buttons = array(
-            Widget::Anchor(tr('Create New'), Administration::instance()->getCurrentPageURL().'new/'.($prepopulate_querystring ? '?' . $prepopulate_querystring : ''), tr('Create a new entry'), 'create button', null, array('accesskey' => 'c'))
+            Widget::Anchor(tr('Create New'), Symphony::get('Engine')->getCurrentPageURL().'new/'.($prepopulate_querystring ? '?' . $prepopulate_querystring : ''), tr('Create a new entry'), 'create button', null, array('accesskey' => 'c'))
         );
 
         // Only show the Edit Section button if the Author is a developer. #938 ^BA
-        if (Administration::instance()->Author->isDeveloper()) {
+        if (Symphony::get('Author')->isDeveloper()) {
             array_unshift($subheading_buttons, Widget::Anchor(tr('Edit Section'), SYMPHONY_URL . '/blueprints/sections/edit/' . $section_id . '/', tr('Edit Section Configuration'), 'button'));
         }
 
@@ -190,12 +190,12 @@ class PublishPage extends AdministrationPage
          * The current where statement, or null if not set
          * @param string $joins
          */
-        Symphony::ExtensionManager()->notifyMembers('AdjustPublishFiltering', '/publish/', array('section-id' => $section_id, 'where' => &$where, 'joins' => &$joins));
+        Symphony::get('ExtensionManager')->notifyMembers('AdjustPublishFiltering', '/publish/', array('section-id' => $section_id, 'where' => &$where, 'joins' => &$joins));
 
         // Check that the filtered query fails that the filter is dropped and an
         // error is logged. #841 ^BA
         try {
-            $entries = EntryManager::fetchByPage($current_page, $section_id, Symphony::Configuration()->get('pagination_maximum_rows', 'symphony'), $where, $joins);
+            $entries = EntryManager::fetchByPage($current_page, $section_id, Symphony::get('Configuration')->get('pagination_maximum_rows', 'symphony'), $where, $joins);
         } catch (DatabaseException $ex) {
             $this->pageAlert(tr('An error occurred while retrieving filtered entries. Showing all entries instead.'), Alert::ERROR);
             $filter_querystring = null;
@@ -210,7 +210,7 @@ class PublishPage extends AdministrationPage
                 E_NOTICE,
                 true
             );
-            $entries = EntryManager::fetchByPage($current_page, $section_id, Symphony::Configuration()->get('pagination_maximum_rows', 'symphony'));
+            $entries = EntryManager::fetchByPage($current_page, $section_id, Symphony::get('Configuration')->get('pagination_maximum_rows', 'symphony'));
         }
 
         $visible_columns = $section->fetchVisibleColumns();
@@ -268,7 +268,7 @@ class PublishPage extends AdministrationPage
          * @param integer $section_id
          * The current Section ID
          */
-        Symphony::ExtensionManager()->notifyMembers('AddCustomPublishColumn', '/publish/', array('tableHead' => &$aTableHead, 'section_id' => $section->get('id')));
+        Symphony::get('ExtensionManager')->notifyMembers('AddCustomPublishColumn', '/publish/', array('tableHead' => &$aTableHead, 'section_id' => $section->get('id')));
 
         // Table Body
         $aTableBody = array();
@@ -294,11 +294,11 @@ class PublishPage extends AdministrationPage
 
                 // Setup each cell
                 if (!is_array($visible_columns) || empty($visible_columns)) {
-                    $tableData[] = Widget::TableData(Widget::Anchor($entry->get('id'), Administration::instance()->getCurrentPageURL() . 'edit/' . $entry->get('id') . '/'));
+                    $tableData[] = Widget::TableData(Widget::Anchor($entry->get('id'), Symphony::get('Engine')->getCurrentPageURL() . 'edit/' . $entry->get('id') . '/'));
                 } else {
                     $link = Widget::Anchor(
                         tr('None'),
-                        Administration::instance()->getCurrentPageURL() . 'edit/' . $entry->get('id') . '/'.($filter_querystring ? '?' . $prepopulate_querystring : ''),
+                        Symphony::get('Engine')->getCurrentPageURL() . 'edit/' . $entry->get('id') . '/'.($filter_querystring ? '?' . $prepopulate_querystring : ''),
                         $entry->get('id'),
                         'content'
                     );
@@ -380,7 +380,7 @@ class PublishPage extends AdministrationPage
                  * @param Entry $entry
                  *  The entry object for this row
                  */
-                Symphony::ExtensionManager()->notifyMembers(
+                Symphony::get('ExtensionManager')->notifyMembers(
                     'AddCustomPublishColumnData',
                     '/publish/',
                     array(
@@ -455,7 +455,7 @@ class PublishPage extends AdministrationPage
          *  in the With Selected menu. Options should follow the same format
          *  expected by `Widget::selectBuildOption`. Passed by reference.
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'AddCustomActions',
             '/publish/',
             array(
@@ -475,7 +475,7 @@ class PublishPage extends AdministrationPage
             // First
             $li = new XMLElement('li');
             if ($current_page > 1) {
-                $li->appendChild(Widget::Anchor(tr('First'), Administration::instance()->getCurrentPageURL(). '?pg=1'.($filter_querystring ? "&amp;" . $filter_querystring : '')));
+                $li->appendChild(Widget::Anchor(tr('First'), Symphony::get('Engine')->getCurrentPageURL(). '?pg=1'.($filter_querystring ? "&amp;" . $filter_querystring : '')));
             } else {
                 $li->setValue(tr('First'));
             }
@@ -485,7 +485,7 @@ class PublishPage extends AdministrationPage
             // Previous
             $li = new XMLElement('li');
             if ($current_page > 1) {
-                $li->appendChild(Widget::Anchor(tr('&larr; Previous'), Administration::instance()->getCurrentPageURL(). '?pg=' . ($current_page - 1).($filter_querystring ? "&amp;" . $filter_querystring : '')));
+                $li->appendChild(Widget::Anchor(tr('&larr; Previous'), Symphony::get('Engine')->getCurrentPageURL(). '?pg=' . ($current_page - 1).($filter_querystring ? "&amp;" . $filter_querystring : '')));
             } else {
                 $li->setValue(tr('&larr; Previous'));
             }
@@ -500,13 +500,13 @@ class PublishPage extends AdministrationPage
                     'Viewing %1$s - %2$s of %3$s entries',
                     array(
                         $entries['start'],
-                        ($current_page != $entries['total-pages']) ? $current_page * Symphony::Configuration()->get('pagination_maximum_rows', 'symphony') : $entries['total-entries'],
+                        ($current_page != $entries['total-pages']) ? $current_page * Symphony::get('Configuration')->get('pagination_maximum_rows', 'symphony') : $entries['total-entries'],
                         $entries['total-entries']
                     )
                 )
             );
 
-            $pgform = Widget::Form(Administration::instance()->getCurrentPageURL(), 'get', 'paginationform');
+            $pgform = Widget::Form(Symphony::get('Engine')->getCurrentPageURL(), 'get', 'paginationform');
             $pgmax = max($current_page, $entries['total-pages']);
             $pgform->appendChild(
                 Widget::Input(
@@ -527,7 +527,7 @@ class PublishPage extends AdministrationPage
             // Next
             $li = new XMLElement('li');
             if ($current_page < $entries['total-pages']) {
-                $li->appendChild(Widget::Anchor(tr('Next &rarr;'), Administration::instance()->getCurrentPageURL(). '?pg=' . ($current_page + 1).($filter_querystring ? "&amp;" . $filter_querystring : '')));
+                $li->appendChild(Widget::Anchor(tr('Next &rarr;'), Symphony::get('Engine')->getCurrentPageURL(). '?pg=' . ($current_page + 1).($filter_querystring ? "&amp;" . $filter_querystring : '')));
             } else {
                 $li->setValue(tr('Next &rarr;'));
             }
@@ -536,7 +536,7 @@ class PublishPage extends AdministrationPage
             // Last
             $li = new XMLElement('li');
             if ($current_page < $entries['total-pages']) {
-                $li->appendChild(Widget::Anchor(tr('Last'), Administration::instance()->getCurrentPageURL(). '?pg=' . $entries['total-pages'].($filter_querystring ? "&amp;" . $filter_querystring : '')));
+                $li->appendChild(Widget::Anchor(tr('Last'), Symphony::get('Engine')->getCurrentPageURL(). '?pg=' . $entries['total-pages'].($filter_querystring ? "&amp;" . $filter_querystring : '')));
             } else {
                 $li->setValue(tr('Last'));
             }
@@ -564,7 +564,7 @@ class PublishPage extends AdministrationPage
              *  An array of the selected rows. The value is usually the ID of the
              *  the associated object.
              */
-            Symphony::ExtensionManager()->notifyMembers('CustomActions', '/publish/', array(
+            Symphony::get('ExtensionManager')->notifyMembers('CustomActions', '/publish/', array(
                 'checked' => $checked
             ));
 
@@ -581,7 +581,7 @@ class PublishPage extends AdministrationPage
                      * @param array $entry_id
                      *  An array of Entry ID's passed by reference
                      */
-                    Symphony::ExtensionManager()->notifyMembers('EntryPreDelete', '/publish/', array('entry_id' => &$checked));
+                    Symphony::get('ExtensionManager')->notifyMembers('EntryPreDelete', '/publish/', array('entry_id' => &$checked));
 
                     EntryManager::delete($checked);
 
@@ -596,7 +596,7 @@ class PublishPage extends AdministrationPage
                      * @param array $entry_id
                      *  An array of Entry ID's that were deleted.
                      */
-                    Symphony::ExtensionManager()->notifyMembers('EntryPostDelete', '/publish/', array('entry_id' => $checked));
+                    Symphony::get('ExtensionManager')->notifyMembers('EntryPostDelete', '/publish/', array('entry_id' => $checked));
 
                     redirect($_SERVER['REQUEST_URI']);
                 default:
@@ -622,7 +622,7 @@ class PublishPage extends AdministrationPage
                              * @param Entry $entry
                              * @param array $fields
                              */
-                            Symphony::ExtensionManager()->notifyMembers(
+                            Symphony::get('ExtensionManager')->notifyMembers(
                                 'EntryPreEdit',
                                 '/publish/edit/',
                                 array(
@@ -644,7 +644,7 @@ class PublishPage extends AdministrationPage
                              * @param Entry $entry
                              * @param array $fields
                              */
-                            Symphony::ExtensionManager()->notifyMembers(
+                            Symphony::get('ExtensionManager')->notifyMembers(
                                 'EntryPostEdit',
                                 '/publish/edit/',
                                 array(
@@ -666,7 +666,7 @@ class PublishPage extends AdministrationPage
     public function viewNew()
     {
         if (!$section_id = SectionManager::fetchIDFromHandle($this->_context['section_handle'])) {
-            Administration::instance()->throwCustomError(
+            Symphony::get('Engine')->throwCustomError(
                 tr('The Section, %s, could not be found.', array('<code>' . $this->_context['section_handle'] . '</code>')),
                 tr('Unknown Section'),
                 Page::HTTP_STATUS_NOT_FOUND
@@ -681,7 +681,7 @@ class PublishPage extends AdministrationPage
         $this->setTitle(tr('%1$s &ndash; %2$s', array($section->get('name'), tr('Symphony'))));
 
         // Only show the Edit Section button if the Author is a developer. #938 ^BA
-        if (Administration::instance()->Author->isDeveloper()) {
+        if (Symphony::get('Author')->isDeveloper()) {
             $this->appendSubheading(
                 tr('Untitled'),
                 Widget::Anchor(tr('Edit Section'), SYMPHONY_URL . '/blueprints/sections/edit/' . $section_id . '/', tr('Edit Section Configuration'), 'button')
@@ -708,7 +708,7 @@ class PublishPage extends AdministrationPage
             )
         );
 
-        $this->Form->appendChild(Widget::Input('MAX_FILE_SIZE', Symphony::Configuration()->get('max_upload_size', 'admin'), 'hidden'));
+        $this->Form->appendChild(Widget::Input('MAX_FILE_SIZE', Symphony::get('Configuration')->get('max_upload_size', 'admin'), 'hidden'));
 
         // If there is post data floating around, due to errors, create an entry object
         if (isset($_POST['fields'])) {
@@ -751,7 +751,7 @@ class PublishPage extends AdministrationPage
         if ((!is_array($main_fields) || empty($main_fields)) && (!is_array($sidebar_fields) || empty($sidebar_fields))) {
             $message = tr('Fields must be added to this section before an entry can be created.');
 
-            if (Administration::instance()->Author->isDeveloper()) {
+            if (Symphony::get('Author')->isDeveloper()) {
                 $message .= ' <a href="' . SYMPHONY_URL . '/blueprints/sections/edit/' . $section->get('id') . '/" accesskey="c">'
                 . tr('Add fields')
                 . '</a>';
@@ -795,7 +795,7 @@ class PublishPage extends AdministrationPage
             $section_id = SectionManager::fetchIDFromHandle($this->_context['section_handle']);
 
             if (!$section = SectionManager::fetch($section_id)) {
-                Administration::instance()->throwCustomError(
+                Symphony::get('Engine')->throwCustomError(
                     tr('The Section, %s, could not be found.', array('<code>' . $this->_context['section_handle'] . '</code>')),
                     tr('Unknown Section'),
                     Page::HTTP_STATUS_NOT_FOUND
@@ -803,7 +803,7 @@ class PublishPage extends AdministrationPage
             }
 
             $entry = EntryManager::create();
-            $entry->set('author_id', Administration::instance()->Author->get('id'));
+            $entry->set('author_id', Symphony::get('Author')->get('id'));
             $entry->set('section_id', $section_id);
             $entry->set('creation_date', DateTimeObj::get('c'));
             $entry->set('modification_date', DateTimeObj::get('c'));
@@ -853,7 +853,7 @@ class PublishPage extends AdministrationPage
                  * @param Entry $entry
                  * @param array $fields
                  */
-                Symphony::ExtensionManager()->notifyMembers('EntryPreCreate', '/publish/new/', array('section' => $section, 'entry' => &$entry, 'fields' => &$fields));
+                Symphony::get('ExtensionManager')->notifyMembers('EntryPreCreate', '/publish/new/', array('section' => $section, 'entry' => &$entry, 'fields' => &$fields));
 
                 // Check to see if the dancing was premature
                 if (!$entry->commit()) {
@@ -870,7 +870,7 @@ class PublishPage extends AdministrationPage
                      * @param Entry $entry
                      * @param array $fields
                      */
-                    Symphony::ExtensionManager()->notifyMembers('EntryPostCreate', '/publish/new/', array('section' => $section, 'entry' => $entry, 'fields' => $fields));
+                    Symphony::get('ExtensionManager')->notifyMembers('EntryPostCreate', '/publish/new/', array('section' => $section, 'entry' => $entry, 'fields' => $fields));
 
                     $prepopulate_querystring = '';
 
@@ -898,7 +898,7 @@ class PublishPage extends AdministrationPage
     public function viewEdit()
     {
         if (!$section_id = SectionManager::fetchIDFromHandle($this->_context['section_handle'])) {
-            Administration::instance()->throwCustomError(
+            Symphony::get('Engine')->throwCustomError(
                 tr('The Section, %s, could not be found.', array('<code>' . $this->_context['section_handle'] . '</code>')),
                 tr('Unknown Section'),
                 Page::HTTP_STATUS_NOT_FOUND
@@ -914,7 +914,7 @@ class PublishPage extends AdministrationPage
         EntryManager::setFetchSorting('id', 'DESC');
 
         if (!$existingEntry = EntryManager::fetch($entry_id)) {
-            Administration::instance()->throwCustomError(
+            Symphony::get('Engine')->throwCustomError(
                 tr('Unknown Entry'),
                 tr('The Entry, %s, could not be found.', array($entry_id)),
                 Page::HTTP_STATUS_NOT_FOUND
@@ -953,7 +953,7 @@ class PublishPage extends AdministrationPage
          * @param Entry $entry
          * @param array $fields
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'EntryPreRender',
             '/publish/edit/',
             array(
@@ -1011,7 +1011,7 @@ class PublishPage extends AdministrationPage
         }
 
         // Determine the page title
-        $field_id = Symphony::Database()->fetchVar('id', 0, "SELECT `id` FROM `tbl_fields` WHERE `parent_section` = '".$section->get('id')."' ORDER BY `sortorder` LIMIT 1");
+        $field_id = Symphony::get('Database')->fetchVar('id', 0, "SELECT `id` FROM `tbl_fields` WHERE `parent_section` = '".$section->get('id')."' ORDER BY `sortorder` LIMIT 1");
         if (!is_null($field_id)) {
             $field = FieldManager::fetch($field_id);
         }
@@ -1045,7 +1045,7 @@ class PublishPage extends AdministrationPage
         $this->setTitle(tr('%1$s &ndash; %2$s &ndash; %3$s', array($title, $section->get('name'), tr('Symphony'))));
 
         // Only show the Edit Section button if the Author is a developer. #938 ^BA
-        if (Administration::instance()->Author->isDeveloper()) {
+        if (Symphony::get('Author')->isDeveloper()) {
             $this->appendSubheading(
                 $title,
                 Widget::Anchor(tr('Edit Section'), SYMPHONY_URL . '/blueprints/sections/edit/' . $section_id . '/', tr('Edit Section Configuration'), 'button')
@@ -1060,7 +1060,7 @@ class PublishPage extends AdministrationPage
             )
         );
 
-        $this->Form->appendChild(Widget::Input('MAX_FILE_SIZE', Symphony::Configuration()->get('max_upload_size', 'admin'), 'hidden'));
+        $this->Form->appendChild(Widget::Input('MAX_FILE_SIZE', Symphony::get('Configuration')->get('max_upload_size', 'admin'), 'hidden'));
 
         $primary = new XMLElement('fieldset');
         $primary->setAttribute('class', 'primary column');
@@ -1071,7 +1071,7 @@ class PublishPage extends AdministrationPage
         if ((!is_array($main_fields) || empty($main_fields)) && (!is_array($sidebar_fields) || empty($sidebar_fields))) {
             $message = tr('Fields must be added to this section before an entry can be created.');
 
-            if (Administration::instance()->Author->isDeveloper()) {
+            if (Symphony::get('Author')->isDeveloper()) {
                 $message .= ' <a href="' . SYMPHONY_URL . '/blueprints/sections/edit/' . $section->get('id') . '/" accesskey="c">'
                 . tr('Add fields')
                 . '</a>';
@@ -1119,7 +1119,7 @@ class PublishPage extends AdministrationPage
 
         if (@array_key_exists('save', $_POST['action']) || @array_key_exists("done", $_POST['action'])) {
             if (!$ret = EntryManager::fetch($entry_id)) {
-                Administration::instance()->throwCustomError(
+                Symphony::get('Engine')->throwCustomError(
                     tr('The Entry, %s, could not be found.', array($entry_id)),
                     tr('Unknown Entry'),
                     Page::HTTP_STATUS_NOT_FOUND
@@ -1152,7 +1152,7 @@ class PublishPage extends AdministrationPage
                  * @param Entry $entry
                  * @param array $fields
                  */
-                Symphony::ExtensionManager()->notifyMembers('EntryPreEdit', '/publish/edit/', array('section' => $section, 'entry' => &$entry, 'fields' => $fields));
+                Symphony::get('ExtensionManager')->notifyMembers('EntryPreEdit', '/publish/edit/', array('section' => $section, 'entry' => &$entry, 'fields' => $fields));
 
                 // Check to see if the dancing was premature
                 if (!$entry->commit()) {
@@ -1169,7 +1169,7 @@ class PublishPage extends AdministrationPage
                      * @param Entry $entry
                      * @param array $fields
                      */
-                    Symphony::ExtensionManager()->notifyMembers('EntryPostEdit', '/publish/edit/', array('section' => $section, 'entry' => $entry, 'fields' => $fields));
+                    Symphony::get('ExtensionManager')->notifyMembers('EntryPostEdit', '/publish/edit/', array('section' => $section, 'entry' => $entry, 'fields' => $fields));
 
                     $prepopulate_querystring = '';
                     if (isset($_POST['prepopulate'])) {
@@ -1203,7 +1203,7 @@ class PublishPage extends AdministrationPage
              *  An array of Entry ID's passed by reference
              */
             $checked = array($entry_id);
-            Symphony::ExtensionManager()->notifyMembers('EntryPreDelete', '/publish/', array('entry_id' => &$checked));
+            Symphony::get('ExtensionManager')->notifyMembers('EntryPreDelete', '/publish/', array('entry_id' => &$checked));
 
             EntryManager::delete($checked);
 
@@ -1218,7 +1218,7 @@ class PublishPage extends AdministrationPage
              * @param array $entry_id
              *  An array of Entry ID's that were deleted.
              */
-            Symphony::ExtensionManager()->notifyMembers('EntryPostDelete', '/publish/', array('entry_id' => $checked));
+            Symphony::get('ExtensionManager')->notifyMembers('EntryPostDelete', '/publish/', array('entry_id' => $checked));
 
             redirect(SYMPHONY_URL . '/publish/'.$this->_context['section_handle'].'/');
         }
@@ -1278,7 +1278,7 @@ class PublishPage extends AdministrationPage
     private function prepareAssociationsDrawer($section)
     {
         $entry_id = (!is_null($this->_context['entry_id'])) ? $this->_context['entry_id'] : null;
-        $show_entries = Symphony::Configuration()->get('association_maximum_rows', 'symphony');
+        $show_entries = Symphony::get('Configuration')->get('association_maximum_rows', 'symphony');
 
         if (is_null($entry_id) && !isset($_GET['prepopulate']) || is_null($show_entries) || $show_entries == 0) {
             return;
@@ -1306,7 +1306,7 @@ class PublishPage extends AdministrationPage
          *  The position of the Drawer, defaults to `vertical-right`. Available
          *  values of `vertical-left, `vertical-right` and `horizontal`
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'PrepareAssociationsDrawer',
             '/publish/',
             array(
@@ -1494,7 +1494,7 @@ class PublishPage extends AdministrationPage
     public function findRelatedEntries($field_id = null, $entry_id)
     {
         try {
-            $ids = Symphony::Database()->fetchCol(
+            $ids = Symphony::get('Database')->fetchCol(
                 'entry_id',
                 sprintf(
                     "SELECT `entry_id`
@@ -1522,7 +1522,7 @@ class PublishPage extends AdministrationPage
     public function findParentRelatedEntries($field_id = null, $entry_id)
     {
         try {
-            $ids = Symphony::Database()->fetchCol(
+            $ids = Symphony::get('Database')->fetchCol(
                 'relation_id',
                 sprintf(
                     "SELECT `relation_id`

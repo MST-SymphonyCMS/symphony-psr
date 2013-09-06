@@ -60,7 +60,7 @@ class DynamicXmlDatasource extends Datasource
 
         $cache_id = md5($this->dsParamURL . serialize($this->dsParamFILTERS) . $this->dsParamXPATH);
 
-        $cache = new Cacheable(Symphony::Database());
+        $cache = new Cacheable(Symphony::get('Database'));
 
         $cachedData = $cache->check($cache_id);
         $writeToCache = false;

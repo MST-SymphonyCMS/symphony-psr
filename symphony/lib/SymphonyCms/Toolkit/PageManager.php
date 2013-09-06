@@ -34,11 +34,11 @@ class PageManager
             $fields['sortorder'] = self::fetchNextSortOrder();
         }
 
-        if (!Symphony::Database()->insert($fields, 'tbl_pages')) {
+        if (!Symphony::get('Database')->insert($fields, 'tbl_pages')) {
             return false;
         }
 
-        return Symphony::Database()->getInsertID();
+        return Symphony::get('Database')->getInsertID();
     }
 
     /**
@@ -51,7 +51,7 @@ class PageManager
      */
     public static function fetchTitleFromHandle($handle)
     {
-        return Symphony::Database()->fetchVar(
+        return Symphony::get('Database')->fetchVar(
             'title',
             0,
             sprintf(
@@ -59,7 +59,7 @@ class PageManager
                 FROM `tbl_pages`
                 WHERE `handle` = '%s'
                 LIMIT 1",
-                Symphony::Database()->cleanValue($handle)
+                Symphony::get('Database')->cleanValue($handle)
             )
         );
     }
@@ -74,7 +74,7 @@ class PageManager
      */
     public static function fetchIDFromHandle($handle)
     {
-        return Symphony::Database()->fetchVar(
+        return Symphony::get('Database')->fetchVar(
             'id',
             0,
             sprintf(
@@ -82,7 +82,7 @@ class PageManager
                 FROM `tbl_pages`
                 WHERE `handle` = '%s'
                 LIMIT 1",
-                Symphony::Database()->cleanValue($handle)
+                Symphony::get('Database')->cleanValue($handle)
             )
         );
     }
@@ -106,7 +106,7 @@ class PageManager
         PageManager::deletePageTypes($page_id);
 
         foreach ($types as $type) {
-            Symphony::Database()->insert(
+            Symphony::get('Database')->insert(
                 array(
                     'page_id' => $page_id,
                     'type' => $type
@@ -199,7 +199,7 @@ class PageManager
          * @param string $contents
          *  The contents of the `$data`, passed by reference
          */
-        Symphony::ExtensionManager()->notifyMembers('PageTemplatePreCreate', '/blueprints/pages/', array('file' => $new, 'contents' => &$data));
+        Symphony::get('ExtensionManager')->notifyMembers('PageTemplatePreCreate', '/blueprints/pages/', array('file' => $new, 'contents' => &$data));
 
         if (PageManager::writePageFiles($new, $data)) {
             // Remove the old file, in the case of a rename
@@ -217,7 +217,7 @@ class PageManager
              * @param string $file
              *  The path to the Page Template file
              */
-            Symphony::ExtensionManager()->notifyMembers('PageTemplatePostCreate', '/blueprints/pages/', array('file' => $new));
+            Symphony::get('ExtensionManager')->notifyMembers('PageTemplatePostCreate', '/blueprints/pages/', array('file' => $new));
 
             return true;
         }
@@ -238,7 +238,7 @@ class PageManager
      */
     public static function writePageFiles($path, $data)
     {
-        return General::writeFile($path, $data, Symphony::Configuration()->get('write_mode', 'file'));
+        return General::writeFile($path, $data, Symphony::get('Configuration')->get('write_mode', 'file'));
     }
 
     /**
@@ -268,7 +268,7 @@ class PageManager
             unset($fields['id']);
         }
 
-        if (Symphony::Database()->update($fields, 'tbl_pages', "`id` = '$page_id'")) {
+        if (Symphony::get('Database')->update($fields, 'tbl_pages', "`id` = '$page_id'")) {
             // If set, this will clear the page's types.
             if ($delete_types) {
                 PageManager::deletePageTypes($page_id);
@@ -357,8 +357,8 @@ class PageManager
         // Delete from tbl_pages/tbl_page_types
         if ($can_proceed) {
             PageManager::deletePageTypes($page_id);
-            Symphony::Database()->delete('tbl_pages', sprintf(" `id` = %d ", $page_id));
-            Symphony::Database()->query(
+            Symphony::get('Database')->delete('tbl_pages', sprintf(" `id` = %d ", $page_id));
+            Symphony::get('Database')->query(
                 sprintf(
                     "UPDATE
                         tbl_pages
@@ -388,7 +388,7 @@ class PageManager
             return false;
         }
 
-        return Symphony::Database()->delete('tbl_pages_types', sprintf(" `page_id` = %d ", $page_id));
+        return Symphony::get('Database')->delete('tbl_pages_types', sprintf(" `page_id` = %d ", $page_id));
     }
 
     /**
@@ -465,7 +465,7 @@ class PageManager
             $order_by = 'sortorder ASC';
         }
 
-        $pages = Symphony::Database()->fetch(
+        $pages = Symphony::get('Database')->fetch(
             sprintf(
                 "SELECT
                     %s
@@ -537,7 +537,7 @@ class PageManager
 
         if (!is_array($page_id)) {
             $page_id = array(
-                Symphony::Database()->cleanValue($page_id)
+                Symphony::get('Database')->cleanValue($page_id)
             );
         }
 
@@ -574,7 +574,7 @@ class PageManager
             return PageManager::fetch();
         }
 
-        $pages = Symphony::Database()->fetch(
+        $pages = Symphony::get('Database')->fetch(
             sprintf(
                 "SELECT
                     `p`.*
@@ -584,7 +584,7 @@ class PageManager
                     `tbl_pages_types` AS `pt` ON (p.id = pt.page_id)
                 WHERE
                     `pt`.type = '%s'",
-                Symphony::Database()->cleanValue($type)
+                Symphony::get('Database')->cleanValue($type)
             )
         );
 
@@ -636,7 +636,7 @@ class PageManager
      */
     public static function fetchPageTypes($page_id = null)
     {
-        return Symphony::Database()->fetchCol(
+        return Symphony::get('Database')->fetchCol(
             'type',
             sprintf(
                 "SELECT
@@ -684,7 +684,7 @@ class PageManager
      */
     public static function fetchNextSortOrder()
     {
-        $next = Symphony::Database()->fetchVar(
+        $next = Symphony::get('Database')->fetchVar(
             "next",
             0,
             "SELECT
@@ -705,7 +705,7 @@ class PageManager
      */
     public static function fetchAllPagesPageTypes()
     {
-        $types = Symphony::Database()->fetch("SELECT `page_id`,`type` FROM `tbl_pages_types`");
+        $types = Symphony::get('Database')->fetch("SELECT `page_id`,`type` FROM `tbl_pages_types`");
         $page_types = array();
 
         if (is_array($types)) {
@@ -805,7 +805,7 @@ class PageManager
      */
     public static function hasPageTypeBeenUsed($page_id = null, $type)
     {
-        return (boolean)Symphony::Database()->fetchRow(
+        return (boolean)Symphony::get('Database')->fetchRow(
             0,
             sprintf(
                 "SELECT
@@ -817,7 +817,7 @@ class PageManager
                     AND pt.type = '%s'
                 LIMIT 1",
                 $page_id,
-                Symphony::Database()->cleanValue($type)
+                Symphony::get('Database')->cleanValue($type)
             )
         );
     }
@@ -833,7 +833,7 @@ class PageManager
      */
     public static function hasChildPages($page_id = null)
     {
-        return (boolean)Symphony::Database()->fetchVar(
+        return (boolean)Symphony::get('Database')->fetchVar(
             'id',
             0,
             sprintf(
@@ -884,7 +884,7 @@ class PageManager
     public static function resolvePage($page_id, $column)
     {
         $path = array();
-        $page = Symphony::Database()->fetchRow(
+        $page = Symphony::get('Database')->fetchRow(
             0,
             sprintf(
                 "SELECT
@@ -898,7 +898,7 @@ class PageManager
                 LIMIT 1",
                 $column,
                 $page_id,
-                Symphony::Database()->cleanValue($page_id)
+                Symphony::get('Database')->cleanValue($page_id)
             )
         );
 
@@ -911,7 +911,7 @@ class PageManager
         if (!is_null($page['parent'])) {
             $next_parent = $page['parent'];
 
-            while ($parent = Symphony::Database()->fetchRow(
+            while ($parent = Symphony::get('Database')->fetchRow(
                 0,
                 sprintf(
                     "SELECT
@@ -984,12 +984,12 @@ class PageManager
      */
     public static function resolvePageByPath($handle, $path = false)
     {
-        return Symphony::Database()->fetchRow(
+        return Symphony::get('Database')->fetchRow(
             0,
             sprintf(
                 "SELECT * FROM `tbl_pages` WHERE `path` %s AND `handle` = '%s' LIMIT 1",
-                ($path ? " = '".Symphony::Database()->cleanValue($path)."'" : 'IS null'),
-                Symphony::Database()->cleanValue($handle)
+                ($path ? " = '".Symphony::get('Database')->cleanValue($path)."'" : 'IS null'),
+                Symphony::get('Database')->cleanValue($handle)
             )
         );
     }
@@ -1004,7 +1004,7 @@ class PageManager
      */
     public static function isDataSourceUsed($handle)
     {
-        return (boolean)Symphony::Database()->fetchVar('count', 0, "SELECT COUNT(*) AS `count` FROM `tbl_pages` WHERE `data_sources` REGEXP '[[:<:]]{$handle}[[:>:]]' ") > 0;
+        return (boolean)Symphony::get('Database')->fetchVar('count', 0, "SELECT COUNT(*) AS `count` FROM `tbl_pages` WHERE `data_sources` REGEXP '[[:<:]]{$handle}[[:>:]]' ") > 0;
     }
 
     /**
@@ -1017,6 +1017,6 @@ class PageManager
      */
     public static function isEventUsed($handle)
     {
-        return (boolean)Symphony::Database()->fetchVar('count', 0, "SELECT COUNT(*) AS `count` FROM `tbl_pages` WHERE `events` REGEXP '[[:<:]]{$handle}[[:>:]]' ") > 0;
+        return (boolean)Symphony::get('Database')->fetchVar('count', 0, "SELECT COUNT(*) AS `count` FROM `tbl_pages` WHERE `events` REGEXP '[[:<:]]{$handle}[[:>:]]' ") > 0;
     }
 }

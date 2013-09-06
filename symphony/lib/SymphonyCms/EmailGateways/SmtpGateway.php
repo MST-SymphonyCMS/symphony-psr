@@ -52,7 +52,7 @@ class SMTPGateway extends EmailGateway
     {
         parent::__construct();
 
-        $this->setConfiguration(Symphony::Configuration()->get('email_smtp'));
+        $this->setConfiguration(Symphony::get('Configuration')->get('email_smtp'));
     }
 
     /**

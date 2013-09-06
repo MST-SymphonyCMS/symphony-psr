@@ -37,8 +37,8 @@ class DatabaseExceptionHandler extends GenericExceptionHandler
             );
         }
 
-        if (is_object(Symphony::Database())) {
-            $debug = Symphony::Database()->debug();
+        if (is_object(Symphony::get('Database'))) {
+            $debug = Symphony::get('Database')->debug();
 
             if (!empty($debug)) {
                 foreach ($debug as $query) {

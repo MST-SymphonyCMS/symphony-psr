@@ -51,7 +51,7 @@ class Session
     public static function start($lifetime = 0, $path = '/', $domain = null, $httpOnly = true, $secure = false)
     {
         if (!self::$_initialized) {
-            if (!is_object(Symphony::Database()) || !Symphony::Database()->isConnected()) {
+            if (!is_object(Symphony::get('Database')) || !Symphony::get('Database')->isConnected()) {
                 return false;
             }
 
@@ -59,7 +59,7 @@ class Session
                 ini_set('session.save_handler', 'user');
                 ini_set('session.gc_maxlifetime', $lifetime);
                 ini_set('session.gc_probability', '1');
-                ini_set('session.gc_divisor', Symphony::Configuration()->get('session_gc_divisor', 'symphony'));
+                ini_set('session.gc_divisor', Symphony::get('Configuration')->get('session_gc_divisor', 'symphony'));
             }
 
             session_set_save_handler(
@@ -154,11 +154,11 @@ class Session
         // Only prevent this record from saving if there isn't already a record
         // in the database. This prevents empty Sessions from being created, but
         // allows them to be nulled.
-        $session_data = Session::read($id);
+        $session_data = self::read($id);
 
         if (is_null($session_data)) {
             $empty = true;
-            $unserialized_data = Session::unserializeSession($session_data);
+            $unserialized_data = self::unserializeSession($session_data);
 
             foreach ($unserialized_data as $d) {
                 if (!empty($d)) {
@@ -177,7 +177,7 @@ class Session
             'session_data' => $data
         );
 
-        return Symphony::Database()->insert($fields, 'tbl_sessions', true);
+        return Symphony::get('Database')->insert($fields, 'tbl_sessions', true);
     }
 
     /**
@@ -216,12 +216,12 @@ class Session
      */
     public static function read($id)
     {
-        return Symphony::Database()->fetchVar(
+        return Symphony::get('Database')->fetchVar(
             'session_data',
             0,
             sprintf(
                 "SELECT `session_data` FROM `tbl_sessions` WHERE `session` = '%s' LIMIT 1",
-                Symphony::Database()->cleanValue($id)
+                Symphony::get('Database')->cleanValue($id)
             )
         );
     }
@@ -236,10 +236,10 @@ class Session
      */
     public static function destroy($id)
     {
-        return Symphony::Database()->query(
+        return Symphony::get('Database')->query(
             sprintf(
                 "DELETE FROM `tbl_sessions` WHERE `session` = '%s'",
-                Symphony::Database()->cleanValue($id)
+                Symphony::get('Database')->cleanValue($id)
             )
         );
     }
@@ -256,10 +256,10 @@ class Session
      */
     public static function gc($max)
     {
-        return Symphony::Database()->query(
+        return Symphony::get('Database')->query(
             sprintf(
                 "DELETE FROM `tbl_sessions` WHERE `session_expires` <= '%s'",
-                Symphony::Database()->cleanValue(time() - $max)
+                Symphony::get('Database')->cleanValue(time() - $max)
             )
         );
     }

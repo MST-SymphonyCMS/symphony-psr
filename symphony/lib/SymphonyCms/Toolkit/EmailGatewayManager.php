@@ -34,8 +34,8 @@ class EmailGatewayManager implements FileResourceInterface
     public static function setDefaultGateway($name)
     {
         if (self::getClassPath($name)) {
-            Symphony::Configuration()->set('default_gateway', $name, 'Email');
-            Symphony::Configuration()->write();
+            Symphony::get('Configuration')->set('default_gateway', $name, 'Email');
+            Symphony::get('Configuration')->write();
         } else {
             throw new EmailGatewayException(tr('This gateway can not be found. Can not save as default.'));
         }
@@ -49,7 +49,7 @@ class EmailGatewayManager implements FileResourceInterface
      */
     public static function getDefaultGateway()
     {
-        $gateway = Symphony::Configuration()->get('default_gateway', 'Email');
+        $gateway = Symphony::get('Configuration')->get('default_gateway', 'Email');
 
         if ($gateway) {
             return $gateway;
@@ -85,7 +85,7 @@ class EmailGatewayManager implements FileResourceInterface
         if(is_file(EMAILGATEWAYS . "/email.$name.php")) {
             return EMAILGATEWAYS;
         } else {
-            $extensions = Symphony::ExtensionManager()->listInstalledHandles();
+            $extensions = Symphony::get('ExtensionManager')->listInstalledHandles();
 
             if (is_array($extensions) && !empty($extensions)) {
                 foreach ($extensions as $e) {
@@ -144,7 +144,7 @@ class EmailGatewayManager implements FileResourceInterface
             }
         }
 
-        $extensions = Symphony::ExtensionManager()->listInstalledHandles();
+        $extensions = Symphony::get('ExtensionManager')->listInstalledHandles();
 
         if (is_array($extensions) && !empty($extensions)) {
             foreach ($extensions as $e) {

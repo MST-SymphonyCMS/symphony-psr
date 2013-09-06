@@ -78,7 +78,7 @@ class FieldDate extends Field implements ExportableFieldInterface, ImportableFie
 
     public function createTable()
     {
-        return Symphony::Database()->query(
+        return Symphony::get('Database')->query(
             "CREATE TABLE IF NOT EXISTS `tbl_entries_data_" . $this->get('id') . "` (
               `id` int(11) unsigned NOT null auto_increment,
               `entry_id` int(11) unsigned NOT null,
@@ -575,7 +575,7 @@ class FieldDate extends Field implements ExportableFieldInterface, ImportableFie
         $modes = (object)$this->getExportModes();
 
         if ($mode === $modes->getObject) {
-            $timezone = Symphony::Configuration()->get('timezone', 'region');
+            $timezone = Symphony::get('Configuration')->get('timezone', 'region');
             $date = new DateTime(
                 (isset($data['value']) ? $data['value'] : 'now')
             );

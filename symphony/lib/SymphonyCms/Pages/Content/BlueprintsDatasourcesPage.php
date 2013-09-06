@@ -32,7 +32,7 @@ class BlueprintsDatasourcesPage extends ResourcesPage
         parent::viewIndex(RESOURCE_TYPE_DS);
 
         $this->setTitle(tr('%1$s &ndash; %2$s', array(tr('Data Sources'), tr('Symphony'))));
-        $this->appendSubheading(tr('Data Sources'), Widget::Anchor(tr('Create New'), Administration::instance()->getCurrentPageURL().'new/', tr('Create a new data source'), 'create button', null, array('accesskey' => 'c')));
+        $this->appendSubheading(tr('Data Sources'), Widget::Anchor(tr('Create New'), Symphony::get('Engine')->getCurrentPageURL().'new/', tr('Create a new data source'), 'create button', null, array('accesskey' => 'c')));
     }
 
     // Both the Edit and New pages need the same form
@@ -83,7 +83,7 @@ class BlueprintsDatasourcesPage extends ResourcesPage
             }
         }
 
-        $providers = Symphony::ExtensionManager()->getProvidersOf(ProviderInterface::DATASOURCE);
+        $providers = Symphony::get('ExtensionManager')->getProvidersOf(ProviderInterface::DATASOURCE);
         $isEditing = false;
         $about = $handle = null;
         $fields = array('name'=>null, 'source'=>null, 'filter'=>null, 'required_url_param'=>null, 'param'=>null);
@@ -1118,7 +1118,7 @@ class BlueprintsDatasourcesPage extends ResourcesPage
              * @param string $file
              *  The path to the Datasource file
              */
-            Symphony::ExtensionManager()->notifyMembers('DatasourcePreDelete', '/blueprints/datasources/', array('file' => DATASOURCES . "/data." . $this->_context[1] . ".php"));
+            Symphony::get('ExtensionManager')->notifyMembers('DatasourcePreDelete', '/blueprints/datasources/', array('file' => DATASOURCES . "/data." . $this->_context[1] . ".php"));
 
             if (!General::deleteFile(DATASOURCES . '/data.' . $this->_context[1] . '.php')) {
                 $this->pageAlert(
@@ -1148,7 +1148,7 @@ class BlueprintsDatasourcesPage extends ResourcesPage
     {
         $fields = $_POST['fields'];
         $this->_errors = array();
-        $providers = Symphony::ExtensionManager()->getProvidersOf(ProviderInterface::DATASOURCE);
+        $providers = Symphony::get('ExtensionManager')->getProvidersOf(ProviderInterface::DATASOURCE);
         $providerClass = null;
 
         if (trim($fields['name']) == '') {
@@ -1264,11 +1264,11 @@ class BlueprintsDatasourcesPage extends ResourcesPage
 
             $about = array(
                 'name' => $fields['name'],
-                'version' => 'Symphony ' . Symphony::Configuration()->get('version', 'symphony'),
+                'version' => 'Symphony ' . Symphony::get('Configuration')->get('version', 'symphony'),
                 'release date' => DateTimeObj::getGMT('c'),
-                'author name' => Administration::instance()->Author->getFullName(),
+                'author name' => Symphony::get('Author')->getFullName(),
                 'author website' => URL,
-                'author email' => Administration::instance()->Author->get('email')
+                'author email' => Symphony::get('Author')->get('email')
             );
 
             // If there is a provider, get their template
@@ -1445,7 +1445,7 @@ class BlueprintsDatasourcesPage extends ResourcesPage
                  * @param array $dependencies
                  *  An array of dependencies that this datasource has
                  */
-                Symphony::ExtensionManager()->notifyMembers(
+                Symphony::get('ExtensionManager')->notifyMembers(
                     'DatasourcePreCreate',
                     '/blueprints/datasources/',
                     array(
@@ -1480,7 +1480,7 @@ class BlueprintsDatasourcesPage extends ResourcesPage
                  *  An associative array of all the filters for this datasource with the key
                  *  being the `field_id` and the value the filter.
                  */
-                Symphony::ExtensionManager()->notifyMembers(
+                Symphony::get('ExtensionManager')->notifyMembers(
                     'DatasourcePreEdit',
                     '/blueprints/datasources/',
                     array(
@@ -1498,7 +1498,7 @@ class BlueprintsDatasourcesPage extends ResourcesPage
             $dsShell = preg_replace(array('/<!--[\w ]++-->/', '/(\r\n){2,}/', '/(\t+[\r\n]){2,}/'), '', $dsShell);
 
             // Write the file
-            if (!is_writable(dirname($file)) || !$write = General::writeFile($file, $dsShell, Symphony::Configuration()->get('write_mode', 'file'))) {
+            if (!is_writable(dirname($file)) || !$write = General::writeFile($file, $dsShell, Symphony::get('Configuration')->get('write_mode', 'file'))) {
                 $this->pageAlert(
                     tr('Failed to write Data source to disk.')
                     . ' ' . tr('Please check permissions on %s.', array('<code>/workspace/data-sources</code>')),
@@ -1536,7 +1536,7 @@ class BlueprintsDatasourcesPage extends ResourcesPage
                      * @param string $file
                      *  The path to the Datasource file
                      */
-                    Symphony::ExtensionManager()->notifyMembers(
+                    Symphony::get('ExtensionManager')->notifyMembers(
                         'DatasourcePostCreate',
                         '/blueprints/datasources/',
                         array(
@@ -1558,7 +1558,7 @@ class BlueprintsDatasourcesPage extends ResourcesPage
                      *  have been renamed. To get the handle from this value, see
                      *  `DatasourceManager::getHandleFromFilename`
                      */
-                    Symphony::ExtensionManager()->notifyMembers(
+                    Symphony::get('ExtensionManager')->notifyMembers(
                         'DatasourcePostEdit',
                         '/blueprints/datasources/',
                         array(

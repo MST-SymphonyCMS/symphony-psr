@@ -86,7 +86,7 @@ class NavigationDatasource extends Datasource
         }
 
         // Build the Query appending the Parent and/or Type WHERE clauses
-        $pages = Symphony::Database()->fetch(
+        $pages = Symphony::get('Database')->fetch(
             sprintf(
                 "SELECT DISTINCT p.id, p.title, p.handle, (SELECT COUNT(id) FROM `tbl_pages` WHERE parent = p.id) AS children
                 FROM `tbl_pages` AS p

@@ -330,7 +330,7 @@ class Field
      */
     public function cleanValue($value)
     {
-        return html_entity_decode(Symphony::Database()->cleanValue($value));
+        return html_entity_decode(Symphony::get('Database')->cleanValue($value));
     }
 
     /**
@@ -810,7 +810,7 @@ class Field
      */
     public function prepareTableValue($data, XMLElement $link = null, $entry_id = null)
     {
-        $max_length = Symphony::Configuration()->get('cell_truncation_length', 'symphony');
+        $max_length = Symphony::get('Configuration')->get('cell_truncation_length', 'symphony');
         $max_length = ($max_length ? $max_length : 75);
 
         $value = strip_tags($data['value']);
@@ -1253,7 +1253,7 @@ class Field
      */
     public function createTable()
     {
-        return Symphony::Database()->query(
+        return Symphony::get('Database')->query(
             "CREATE TABLE IF NOT EXISTS `tbl_entries_data_" . $this->get('id') . "` (
               `id` int(11) unsigned NOT null auto_increment,
               `entry_id` int(11) unsigned NOT null,
@@ -1282,7 +1282,7 @@ class Field
             ? " `entry_id` IN (" . implode(',', $entry_id) . ") "
             : " `entry_id` = '$entry_id' ";
 
-        Symphony::Database()->delete('tbl_entries_data_' . $this->get('id'), $where);
+        Symphony::get('Database')->delete('tbl_entries_data_' . $this->get('id'), $where);
 
         return true;
     }

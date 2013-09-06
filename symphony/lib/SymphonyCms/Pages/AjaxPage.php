@@ -34,7 +34,7 @@ abstract class AjaxPage extends Page
         $this->setHttpStatus(self::HTTP_STATUS_OK);
         $this->addHeaderToPage('Content-Type', 'text/xml');
 
-        Symphony::Profiler()->sample('Page template created', PROFILE_LAP);
+        Symphony::get('Profiler')->sample('Page template created', PROFILE_LAP);
     }
 
     /**

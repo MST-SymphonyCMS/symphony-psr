@@ -48,53 +48,53 @@ class Migration222 extends Migration
     {
         // 2.2.2 Beta 1
         if (version_compare(self::$existing_version, '2.2.2 Beta 1', '<=')) {
-            Symphony::Configuration()->set('version', '2.2.2 Beta 1', 'symphony');
+            Symphony::get('Configuration')->set('version', '2.2.2 Beta 1', 'symphony');
 
             // Rename old variations of the query_caching configuration setting
-            if (Symphony::Configuration()->get('disable_query_caching', 'database')) {
-                $value = (Symphony::Configuration()->get('disable_query_caching', 'database') == "no") ? "on" : "off";
+            if (Symphony::get('Configuration')->get('disable_query_caching', 'database')) {
+                $value = (Symphony::get('Configuration')->get('disable_query_caching', 'database') == "no") ? "on" : "off";
 
-                Symphony::Configuration()->set('query_caching', $value, 'database');
-                Symphony::Configuration()->remove('disable_query_caching', 'database');
+                Symphony::get('Configuration')->set('query_caching', $value, 'database');
+                Symphony::get('Configuration')->remove('disable_query_caching', 'database');
             }
 
             // Add Session GC collection as a configuration parameter
-            Symphony::Configuration()->set('session_gc_divisor', '10', 'symphony');
+            Symphony::get('Configuration')->set('session_gc_divisor', '10', 'symphony');
 
             // Save the manifest changes
-            Symphony::Configuration()->write();
+            Symphony::get('Configuration')->write();
         }
 
         // 2.2.2 Beta 2
         if (version_compare(self::$existing_version, '2.2.2 Beta 2', '<=')) {
-            Symphony::Configuration()->set('version', '2.2.2 Beta 2', 'symphony');
+            Symphony::get('Configuration')->set('version', '2.2.2 Beta 2', 'symphony');
             try {
                 // Change Textareas to be MEDIUMTEXT columns
-                $textarea_tables = Symphony::Database()->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_textarea`");
+                $textarea_tables = Symphony::get('Database')->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_textarea`");
 
                 foreach ($textarea_tables as $field) {
-                    Symphony::Database()->query(
+                    Symphony::get('Database')->query(
                         sprintf(
                             "ALTER TABLE `tbl_entries_data_%d` CHANGE `value` `value` MEDIUMTEXT, CHANGE `value_formatted` `value_formatted` MEDIUMTEXT",
                             $field
                         )
                     );
-                    Symphony::Database()->query(sprintf('OPTIMIZE TABLE `tbl_entries_data_%d`', $field));
+                    Symphony::get('Database')->query(sprintf('OPTIMIZE TABLE `tbl_entries_data_%d`', $field));
                 }
             } catch (Exception $ex) {
 
             }
 
             // Save the manifest changes
-            Symphony::Configuration()->write();
+            Symphony::get('Configuration')->write();
         }
 
         // 2.2.2
         if (version_compare(self::$existing_version, '2.2.2', '<=')) {
-            Symphony::Configuration()->set('version', '2.2.2', 'symphony');
+            Symphony::get('Configuration')->set('version', '2.2.2', 'symphony');
         }
 
-        if (Symphony::Configuration()->write() === false) {
+        if (Symphony::get('Configuration')->write() === false) {
             throw new Exception('Failed to write configuration file, please check the file permissions.');
         } else {
             return true;

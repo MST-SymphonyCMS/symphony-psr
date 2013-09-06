@@ -13,7 +13,7 @@ use \SymphonyCms\Exceptions\GenericErrorHandler;
 use \SymphonyCms\Install\Installer;
 use \SymphonyCms\Install\InstallerPage;
 use \SymphonyCms\Toolkit\Cryptography;
-use \SymphonyCms\Toolkit\ExtensionManager;
+use \SymphonyCms\Extensions\ExtensionManager;
 use \SymphonyCms\Toolkit\Lang;
 use \SymphonyCms\Utilities\General;
 
@@ -193,7 +193,7 @@ class Installer extends Administration
                 'configuration',
                 array(
                     'errors' => $errors,
-                    'default-config' => Symphony::Configuration()->get()
+                    'default-config' => Symphony::get('Configuration')->get()
                 )
             )
         );
@@ -303,7 +303,7 @@ class Installer extends Administration
 
         // Testing the database connection
         try {
-            Symphony::Database()->connect(
+            Symphony::get('Database')->connect(
                 $fields['database']['host'],
                 $fields['database']['user'],
                 $fields['database']['password'],
@@ -326,12 +326,12 @@ class Installer extends Administration
         }
 
         try {
-            if (Symphony::Database()->isConnected()) {
+            if (Symphony::get('Database')->isConnected()) {
                 // Looking for the given database name
-                Symphony::Database()->select($fields['database']['db']);
+                Symphony::get('Database')->select($fields['database']['db']);
 
                 // Incorrect MySQL version
-                $version = Symphony::Database()->fetchVar('version', 0, "SELECT VERSION() AS `version`;");
+                $version = Symphony::get('Database')->fetchVar('version', 0, "SELECT VERSION() AS `version`;");
 
                 if (version_compare($version, '5.0', '<')) {
                     $errors['database-incorrect-version']  = array(
@@ -340,11 +340,11 @@ class Installer extends Administration
                     );
                 } else {
                     // Existing table prefix
-                    $tables = Symphony::Database()->fetch(
+                    $tables = Symphony::get('Database')->fetch(
                         sprintf(
                             "SHOW TABLES FROM `%s` LIKE '%s'",
-                            mysql_real_escape_string($fields['database']['db'], Symphony::Database()->getConnectionResource()),
-                            mysql_real_escape_string($fields['database']['tbl_prefix'], Symphony::Database()->getConnectionResource()) . '%'
+                            mysql_real_escape_string($fields['database']['db'], Symphony::get('Database')->getConnectionResource()),
+                            mysql_real_escape_string($fields['database']['tbl_prefix'], Symphony::get('Database')->getConnectionResource()) . '%'
                         )
                     );
 
@@ -447,7 +447,7 @@ class Installer extends Administration
         Symphony::Log()->pushToLog('MYSQL: Establishing Connection', E_NOTICE, true, true);
 
         try {
-            Symphony::Database()->connect(
+            Symphony::get('Database')->connect(
                 $fields['database']['host'],
                 $fields['database']['user'],
                 $fields['database']['password'],
@@ -462,15 +462,15 @@ class Installer extends Administration
         }
 
         // MySQL: Setting prefix & character encoding
-        Symphony::Database()->setPrefix($fields['database']['tbl_prefix']);
-        Symphony::Database()->setCharacterEncoding();
-        Symphony::Database()->setCharacterSet();
+        Symphony::get('Database')->setPrefix($fields['database']['tbl_prefix']);
+        Symphony::get('Database')->setCharacterEncoding();
+        Symphony::get('Database')->setCharacterSet();
 
         // MySQL: Importing schema
         Symphony::Log()->pushToLog('MYSQL: Importing Table Schema', E_NOTICE, true, true);
 
         try {
-            Symphony::Database()->import(file_get_contents(__DIR__.'/includes/install.sql'), true);
+            Symphony::get('Database')->import(file_get_contents(__DIR__.'/includes/install.sql'), true);
         } catch (DatabaseException $e) {
             self::abort(
                 'There was an error while trying to import data to the database. MySQL returned: ' . $e->getDatabaseErrorCode() . ': ' . $e->getDatabaseErrorMessage(),
@@ -482,14 +482,14 @@ class Installer extends Administration
         Symphony::Log()->pushToLog('MYSQL: Creating Default Author', E_NOTICE, true, true);
 
         try {
-            Symphony::Database()->insert(
+            Symphony::get('Database')->insert(
                 array(
                     'id'                    => 1,
-                    'username'              => Symphony::Database()->cleanValue($fields['user']['username']),
-                    'password'              => Cryptography::hash(Symphony::Database()->cleanValue($fields['user']['password'])),
-                    'first_name'            => Symphony::Database()->cleanValue($fields['user']['firstname']),
-                    'last_name'             => Symphony::Database()->cleanValue($fields['user']['lastname']),
-                    'email'                 => Symphony::Database()->cleanValue($fields['user']['email']),
+                    'username'              => Symphony::get('Database')->cleanValue($fields['user']['username']),
+                    'password'              => Cryptography::hash(Symphony::get('Database')->cleanValue($fields['user']['password'])),
+                    'first_name'            => Symphony::get('Database')->cleanValue($fields['user']['firstname']),
+                    'last_name'             => Symphony::get('Database')->cleanValue($fields['user']['lastname']),
+                    'email'                 => Symphony::get('Database')->cleanValue($fields['user']['email']),
                     'last_seen'             => null,
                     'user_type'             => 'developer',
                     'primary'               => 'yes',
@@ -506,7 +506,7 @@ class Installer extends Administration
         }
 
         // Configuration: Populating array
-        $conf = Symphony::Configuration()->get();
+        $conf = Symphony::get('Configuration')->get();
 
         foreach ($conf as $group => $settings) {
             foreach ($settings as $key => $value) {
@@ -556,9 +556,9 @@ class Installer extends Administration
         // Writing configuration file
         Symphony::Log()->pushToLog('WRITING: Configuration File', E_NOTICE, true, true);
 
-        Symphony::Configuration()->setArray($conf);
+        Symphony::get('Configuration')->setArray($conf);
 
-        if (!Symphony::Configuration()->write(CONFIG, $conf['file']['write_mode'])) {
+        if (!Symphony::get('Configuration')->write(CONFIG, $conf['file']['write_mode'])) {
             self::abort(
                 'Could not create config file ‘' . CONFIG . '’. Check permission on /manifest.',
                 $start
@@ -637,7 +637,7 @@ class Installer extends Administration
 
             if (is_file(DOCROOT . '/workspace/install.sql')) {
                 try {
-                    Symphony::Database()->import(
+                    Symphony::get('Database')->import(
                         file_get_contents(DOCROOT . '/workspace/install.sql'),
                         ($fields['database']['use-server-encoding'] != 'yes' ? true : false),
                         true
@@ -694,9 +694,9 @@ class Installer extends Administration
 
             // Is the language extension enabled?
             if (in_array('lang_' . $language['handle'], ExtensionManager::listInstalledHandles())) {
-                Symphony::Configuration()->set('lang', $_REQUEST['lang'], 'symphony');
+                Symphony::get('Configuration')->set('lang', $_REQUEST['lang'], 'symphony');
 
-                if (!Symphony::Configuration()->write(CONFIG, $conf['file']['write_mode'])) {
+                if (!Symphony::get('Configuration')->write(CONFIG, $conf['file']['write_mode'])) {
                     Symphony::Log()->pushToLog('Could not write default language ‘' . $language['name'] . '’ to config file.', E_NOTICE, true, true);
                 }
             } else {

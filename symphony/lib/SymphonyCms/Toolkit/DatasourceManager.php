@@ -61,7 +61,7 @@ class DatasourceManager implements FileResourceInterface
         if (is_file(DATASOURCES . "/$handle.php")) {
             return DATASOURCES;
         } else {
-            $extensions = Symphony::ExtensionManager()->listInstalledHandles();
+            $extensions = Symphony::get('ExtensionManager')->listInstalledHandles();
 
             if (is_array($extensions) && !empty($extensions)) {
                 foreach ($extensions as $e) {
@@ -139,7 +139,7 @@ class DatasourceManager implements FileResourceInterface
             }
         }
 
-        $extensions = Symphony::ExtensionManager()->listInstalledHandles();
+        $extensions = Symphony::get('ExtensionManager')->listInstalledHandles();
 
         if (is_array($extensions) && !empty($extensions)) {
             foreach ($extensions as $e) {

@@ -40,7 +40,7 @@ class Updater extends Installer
      */
     public function initialiseLang()
     {
-        Lang::set(Symphony::Configuration()->get('lang', 'symphony'), false);
+        Lang::set(Symphony::get('Configuration')->get('lang', 'symphony'), false);
     }
 
     /**
@@ -71,10 +71,10 @@ class Updater extends Installer
     {
         parent::setDatabase();
 
-        $details = Symphony::Configuration()->get('database');
+        $details = Symphony::get('Configuration')->get('database');
 
         try {
-            Symphony::Database()->connect(
+            Symphony::get('Database')->connect(
                 $details['host'],
                 $details['user'],
                 $details['password'],
@@ -89,9 +89,9 @@ class Updater extends Installer
         }
 
         // MySQL: Setting prefix & character encoding
-        Symphony::Database()->setPrefix($details['tbl_prefix']);
-        Symphony::Database()->setCharacterEncoding();
-        Symphony::Database()->setCharacterSet();
+        Symphony::get('Database')->setPrefix($details['tbl_prefix']);
+        Symphony::get('Database')->setCharacterEncoding();
+        Symphony::get('Database')->setCharacterSet();
     }
 
     public function run()
@@ -118,7 +118,7 @@ class Updater extends Installer
 
             $mig = new $classname();
 
-            if (version_compare(Symphony::Configuration()->get('version', 'symphony'), call_user_func(array($mig, 'getVersion')), '<')) {
+            if (version_compare(Symphony::get('Configuration')->get('version', 'symphony'), call_user_func(array($mig, 'getVersion')), '<')) {
                 $migrations[call_user_func(array($mig, 'getVersion'))] = $mig;
             }
         }
@@ -175,7 +175,7 @@ class Updater extends Installer
                     $notes[$version] = $pre_notes;
                 }
 
-                $canProceed = call_user_func(array($mig, 'run'), 'upgrade', Symphony::Configuration()->get('version', 'symphony'));
+                $canProceed = call_user_func(array($mig, 'run'), 'upgrade', Symphony::get('Configuration')->get('version', 'symphony'));
 
                 Symphony::Log()->pushToLog(
                     sprintf('Updater - Migration to %s was %s', $version, ($canProceed ? 'successful' : 'unsuccessful')),

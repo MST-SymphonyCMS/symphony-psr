@@ -28,7 +28,7 @@ class UpdaterPage extends InstallerPage
     {
         parent::build(
             // Replace the installed version with the updated version
-            (isset($this->_params['version']) ? $this->_params['version'] : Symphony::Configuration()->get('version', 'symphony'))
+            (isset($this->_params['version']) ? $this->_params['version'] : Symphony::get('Configuration')->get('version', 'symphony'))
         );
 
         // Add Release Notes for the latest migration
@@ -131,7 +131,7 @@ class UpdaterPage extends InstallerPage
         $this->Form->appendChild(
             new XMLElement(
                 'p',
-                tr('And the crowd goes wild! A victory dance is in order; and look, your mum is watching. She\'s proud.', array(Symphony::Configuration()->get('sitename', 'general')))
+                tr('And the crowd goes wild! A victory dance is in order; and look, your mum is watching. She\'s proud.', array(Symphony::get('Configuration')->get('sitename', 'general')))
             )
         );
         $this->Form->appendChild(

@@ -166,7 +166,7 @@ class DevKit extends HTMLPage
          *  '/frontend/'
          * @param DOMDocument $xml
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'ManipulateDevKitNavigation',
             '/frontend/',
             array(

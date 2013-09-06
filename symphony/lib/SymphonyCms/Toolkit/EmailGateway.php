@@ -637,7 +637,7 @@ abstract class EmailGateway
         $string[0] = strtolower($string[0]);
         $func = create_function('$c', 'return "_" . strtolower($c[1]);');
 
-        return preg_replace_callback('/([A-Z])/', $func, $string);
+        return preg_replacecallback('/([A-Z])/', $func, $string);
     }
 
     public function __destruct()

@@ -76,7 +76,7 @@ class FieldCheckbox extends Field implements ExportableFieldInterface, Importabl
 
     public function createTable()
     {
-        return Symphony::Database()->query(
+        return Symphony::get('Database')->query(
             "CREATE TABLE IF NOT EXISTS `tbl_entries_data_" . $this->get('id') . "` (
               `id` int(11) unsigned NOT null auto_increment,
               `entry_id` int(11) unsigned NOT null,

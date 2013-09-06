@@ -7,7 +7,7 @@ use \SymphonyCms\Symphony;
 use \SymphonyCms\Symphony\Administration;
 use \SymphonyCms\Pages\HTMLPage;
 use \SymphonyCms\Toolkit\Alert;
-use \SymphonyCms\Toolkit\Extension;
+use \SymphonyCms\Extensions\Extension;
 use \SymphonyCms\Toolkit\Lang;
 use \SymphonyCms\Toolkit\Page;
 use \SymphonyCms\Toolkit\PageManager;
@@ -89,7 +89,7 @@ class AdministrationPage extends HTMLPage
      * absolute link by providing a key, 'relative' with the value false.
      * @var array
      */
-    public $_navigation = array();
+    public $navigation = array();
 
     /**
      *  An associative array describing this pages context. This
@@ -99,14 +99,14 @@ class AdministrationPage extends HTMLPage
      *  off the current context or add new keys.
      * @var array
      */
-    public $_context = null;
+    public $context = null;
 
     /**
      * The class attribute of the `<body>` element for this page. Defaults
      * to an empty string
      * @var string
      */
-    private $_body_class = '';
+    private $body_class = '';
 
     /**
      * Constructor calls the parent constructor to set up
@@ -148,13 +148,13 @@ class AdministrationPage extends HTMLPage
     public function setBodyClass($class)
     {
         // Prevents duplicate "index" classes
-        if (!isset($this->_context['page']) || $this->_context['page'] != 'index' || $class != 'index') {
-            $this->_body_class .= $class;
+        if (!isset($this->context['page']) || $this->context['page'] != 'index' || $class != 'index') {
+            $this->body_class .= $class;
         }
     }
 
     /**
-     * Accessor for `$this->_context` which includes contextual information
+     * Accessor for `$this->context` which includes contextual information
      * about the current page such as the class, file location or page root.
      * This information varies depending on if the page is provided by an
      * extension, is for the publish area, is the login page or any other page
@@ -164,7 +164,7 @@ class AdministrationPage extends HTMLPage
      */
     public function getContext()
     {
-        return $this->_context;
+        return $this->context;
     }
 
     /**
@@ -352,10 +352,10 @@ class AdministrationPage extends HTMLPage
      */
     public function build(array $context = array())
     {
-        $this->_context = $context;
+        $this->context = $context;
 
         if (!$this->canAccessPage()) {
-            Administration::instance()->throwCustomError(
+            self::throwCustomError(
                 tr('You are not authorised to access this page.'),
                 tr('Access Denied'),
                 Page::HTTP_STATUS_UNAUTHORIZED
@@ -400,7 +400,7 @@ class AdministrationPage extends HTMLPage
                 "Symphony.Context.add('env', " . json_encode(
                     array_merge(
                         array('page-namespace' => Symphony::getPageNamespace()),
-                        $this->_context
+                        $this->context
                     )
                 ) . "); Symphony.Context.add('root', '" . URL . "');",
                 array('type' => 'text/javascript')
@@ -414,11 +414,11 @@ class AdministrationPage extends HTMLPage
         $this->Context = new XMLElement('div', null, array('id' => 'context'));
         $this->Breadcrumbs = new XMLElement('div', null, array('id' => 'breadcrumbs'));
         $this->Contents = new XMLElement('div', null, array('id' => 'contents'));
-        $this->Form = Widget::Form(Administration::instance()->getCurrentPageURL(), 'post');
+        $this->Form = Widget::Form(Symphony::get('Engine')->getCurrentPageURL(), 'post');
 
         /**
          * Allows developers to insert items into the page HEAD. Use
-         * `Administration::instance()->Page` for access to the page object.
+         * `Symphony::get('Engine')->Page` for access to the page object.
          *
          * @since In Symphony 2.3.2 this delegate was renamed from
          *  `InitaliseAdminPageHead` to the correct spelling of
@@ -429,7 +429,7 @@ class AdministrationPage extends HTMLPage
          * @param string $context
          *  '/backend/'
          */
-        Symphony::ExtensionManager()->notifyMembers('InitialiseAdminPageHead', '/backend/');
+        Symphony::get('ExtensionManager')->notifyMembers('InitialiseAdminPageHead', '/backend/');
 
         $this->addHeaderToPage('Content-Type', 'text/html; charset=UTF-8');
         $this->addHeaderToPage('Cache-Control', 'no-cache, must-revalidate, max-age=0');
@@ -440,11 +440,11 @@ class AdministrationPage extends HTMLPage
 
         if (isset($_REQUEST['action'])) {
             $this->action();
-            Symphony::Profiler()->sample('Page action run', PROFILE_LAP);
+            Symphony::get('Profiler')->sample('Page action run', PROFILE_LAP);
         }
 
         $h1 = new XMLElement('h1');
-        $h1->appendChild(Widget::Anchor(Symphony::Configuration()->get('sitename', 'general'), rtrim(URL, '/') . '/'));
+        $h1->appendChild(Widget::Anchor(Symphony::get('Configuration')->get('sitename', 'general'), rtrim(URL, '/') . '/'));
         $this->Header->appendChild($h1);
 
         $this->appendUserLinks();
@@ -460,7 +460,7 @@ class AdministrationPage extends HTMLPage
 
         parent::build();
 
-        Symphony::Profiler()->sample('Page content created', PROFILE_LAP);
+        Symphony::get('Profiler')->sample('Page content created', PROFILE_LAP);
     }
 
     /**
@@ -506,9 +506,9 @@ class AdministrationPage extends HTMLPage
         }
 
         if ($page_limit == 'author'
-            || ($page_limit == 'developer' && Administration::instance()->Author->isDeveloper())
-            || ($page_limit == 'manager' && (Administration::instance()->Author->isManager() || Administration::instance()->Author->isDeveloper()))
-            || ($page_limit == 'primary' && Administration::instance()->Author->isPrimaryAccount())
+            || ($page_limit == 'developer' && Symphony::get('Author')->isDeveloper())
+            || ($page_limit == 'manager' && (Symphony::get('Author')->isManager() || Symphony::get('Author')->isDeveloper()))
+            || ($page_limit == 'primary' && Symphony::get('Author')->isPrimaryAccount())
         ) {
             return true;
         } else {
@@ -553,7 +553,7 @@ class AdministrationPage extends HTMLPage
         $this->Body->appendChild($this->Wrapper);
 
         $this->appendBodyId();
-        $this->appendBodyClass($this->_context);
+        $this->appendBodyClass($this->context);
 
         return parent::generate($page);
     }
@@ -601,7 +601,7 @@ class AdministrationPage extends HTMLPage
             $body_class .= trim($value) . ' ';
         }
 
-        $classes = array_merge(explode(' ', trim($body_class)), explode(' ', trim($this->_body_class)));
+        $classes = array_merge(explode(' ', trim($body_class)), explode(' ', trim($this->body_class)));
         $body_class = trim(implode(' ', $classes));
 
         if (!empty($body_class)) {
@@ -651,10 +651,10 @@ class AdministrationPage extends HTMLPage
      */
     public function switchboard($type = 'view')
     {
-        if (!isset($this->_context[0]) || trim($this->_context[0]) == '') {
+        if (!isset($this->context[0]) || trim($this->context[0]) == '') {
             $context = 'index';
         } else {
-            $context = $this->_context[0];
+            $context = $this->context[0];
         }
 
         $function = ($type == 'action' ? 'action' : 'view') . ucfirst($context);
@@ -665,7 +665,7 @@ class AdministrationPage extends HTMLPage
                 return;
             }
 
-            Administration::instance()->errorPageNotFound();
+            Symphony::get('Engine')->errorPageNotFound();
         }
 
         $this->$function(null);
@@ -683,14 +683,14 @@ class AdministrationPage extends HTMLPage
     public function appendAlert()
     {
         /**
-         * Allows for appending of alerts. Administration::instance()->Page->Alert is way to tell what
+         * Allows for appending of alerts. Symphony::get('Engine')->Page->Alert is way to tell what
          * is currently in the system
          *
          * @delegate AppendPageAlert
          * @param string $context
          *  '/backend/'
          */
-        Symphony::ExtensionManager()->notifyMembers('AppendPageAlert', '/backend/');
+        Symphony::get('ExtensionManager')->notifyMembers('AppendPageAlert', '/backend/');
 
         if (!is_array($this->Alert) || empty($this->Alert)) {
             return;
@@ -735,7 +735,7 @@ class AdministrationPage extends HTMLPage
          * @param array $nav
          *  An associative array of the current navigation, passed by reference
          */
-        Symphony::ExtensionManager()->notifyMembers('NavigationPreRender', '/backend/', array('navigation' => &$nav));
+        Symphony::get('ExtensionManager')->notifyMembers('NavigationPreRender', '/backend/', array('navigation' => &$nav));
 
         $navElement = new XMLElement('nav', null, array('id' => 'nav'));
         $contentNav = new XMLElement('ul', null, array('class' => 'content'));
@@ -750,9 +750,9 @@ class AdministrationPage extends HTMLPage
 
             if (!isset($n['limit']) || $n['limit'] == 'author') {
                 $can_access = true;
-            } elseif ($n['limit'] == 'developer' && Administration::instance()->Author->isDeveloper()) {
+            } elseif ($n['limit'] == 'developer' && Symphony::get('Author')->isDeveloper()) {
                 $can_access = true;
-            } elseif ($n['limit'] == 'primary' && Administration::instance()->Author->isPrimaryAccount()) {
+            } elseif ($n['limit'] == 'primary' && Symphony::get('Author')->isPrimaryAccount()) {
                 $can_access = true;
             }
 
@@ -777,9 +777,9 @@ class AdministrationPage extends HTMLPage
 
                         if (!isset($c['limit']) || $c['limit'] == 'author') {
                             $can_access_child = true;
-                        } elseif ($c['limit'] == 'developer' && Administration::instance()->Author->isDeveloper()) {
+                        } elseif ($c['limit'] == 'developer' && Symphony::get('Author')->isDeveloper()) {
                             $can_access_child = true;
-                        } elseif ($c['limit'] == 'primary' && Administration::instance()->Author->isPrimaryAccount()) {
+                        } elseif ($c['limit'] == 'primary' && Symphony::get('Author')->isPrimaryAccount()) {
                             $can_access_child = true;
                         }
 
@@ -812,11 +812,11 @@ class AdministrationPage extends HTMLPage
         $navElement->appendChild($structureNav);
         $this->Header->appendChild($navElement);
 
-        Symphony::Profiler()->sample('Navigation Built', PROFILE_LAP);
+        Symphony::get('Profiler')->sample('Navigation Built', PROFILE_LAP);
     }
 
     /**
-     * Returns the `$_navigation` variable of this Page. If it is empty,
+     * Returns the `$navigation` variable of this Page. If it is empty,
      * it will be built by `buildNavigation`
      *
      * @see buildNavigation()
@@ -824,11 +824,11 @@ class AdministrationPage extends HTMLPage
      */
     public function getNavigationArray()
     {
-        if (empty($this->_navigation)) {
+        if (empty($this->navigation)) {
             $this->buildNavigation();
         }
 
-        return $this->_navigation;
+        return $this->navigation;
     }
 
     /**
@@ -945,14 +945,14 @@ class AdministrationPage extends HTMLPage
     private function buildExtensionsNavigation(&$nav)
     {
         // Loop over all the installed extensions to add in other navigation items
-        $extensions = Symphony::ExtensionManager()->listInstalledHandles();
+        $extensions = Symphony::get('ExtensionManager')->listInstalledHandles();
 
         foreach ($extensions as $e) {
-            $extension = Symphony::ExtensionManager()->getInstance($e);
-            $extension_navigation = $extension->fetchNavigation();
+            $extension = Symphony::get('ExtensionManager')->getInstance($e);
+            $extensionnavigation = $extension->fetchNavigation();
 
-            if (is_array($extension_navigation) && !empty($extension_navigation)) {
-                foreach ($extension_navigation as $item) {
+            if (is_array($extensionnavigation) && !empty($extensionnavigation)) {
+                foreach ($extensionnavigation as $item) {
                     $type = isset($item['children']) ? Extension::NAV_GROUP : Extension::NAV_CHILD;
 
                     switch ($type) {
@@ -1032,7 +1032,7 @@ class AdministrationPage extends HTMLPage
     }
 
     /**
-     * This function populates the `$_navigation` array with an associative array
+     * This function populates the `$navigation` array with an associative array
      * of all the navigation groups and their links. Symphony only supports one
      * level of navigation, so children links cannot have children links. The default
      * Symphony navigation is found in the `ASSETS/navigation.xml` folder. This is
@@ -1065,13 +1065,13 @@ class AdministrationPage extends HTMLPage
          * '/backend/'
          * @param array $navigation
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'ExtensionsAddToNavigation',
             '/backend/',
             array('navigation' => &$nav)
         );
 
-        $pageCallback = Administration::instance()->getPageCallback();
+        $pageCallback = Symphony::get('Engine')->getPageCallback();
 
         $pageRoot = $pageCallback['pageroot'] . (isset($pageCallback['context'][0]) ? $pageCallback['context'][0] . '/' : '');
         $found = self::findActiveNavigationGroup($nav, $pageRoot);
@@ -1083,7 +1083,7 @@ class AdministrationPage extends HTMLPage
         }
 
         ksort($nav);
-        $this->_navigation = $nav;
+        $this->navigation = $nav;
     }
 
     /**
@@ -1173,15 +1173,15 @@ class AdministrationPage extends HTMLPage
         $li = new XMLElement('li');
         $li->appendChild(
             Widget::Anchor(
-                Administration::instance()->Author->getFullName(),
-                SYMPHONY_URL . '/system/authors/edit/' . Administration::instance()->Author->get('id') . '/',
+                Symphony::get('Author')->getFullName(),
+                SYMPHONY_URL . '/system/authors/edit/' . Symphony::get('Author')->get('id') . '/',
                 null,
                 null,
                 null,
                 array(
-                    'data-id' => Administration::instance()->Author->get('id'),
-                    'data-name' => Administration::instance()->Author->get('first_name'),
-                    'data-type' => Administration::instance()->Author->get('user_type')
+                    'data-id' => Symphony::get('Author')->get('id'),
+                    'data-name' => Symphony::get('Author')->get('first_name'),
+                    'data-type' => Symphony::get('Author')->get('user_type')
                 )
             )
         );

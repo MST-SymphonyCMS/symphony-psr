@@ -88,7 +88,7 @@ class FieldAuthor extends Field implements ExportableFieldInterface
 
     public function createTable()
     {
-        return Symphony::Database()->query(
+        return Symphony::get('Database')->query(
             "CREATE TABLE IF NOT EXISTS `tbl_entries_data_" . $this->get('id') ."` (
               `id` int(11) unsigned NOT null auto_increment,
               `entry_id` int(11) unsigned NOT null,
@@ -252,7 +252,7 @@ class FieldAuthor extends Field implements ExportableFieldInterface
         $value = isset($data['author_id']) ? $data['author_id'] : null;
 
         if ($this->get('default_to_current_user') == 'yes' && empty($data) && empty($_POST)) {
-            $value = array(Administration::instance()->Author->get('id'));
+            $value = array(Symphony::get('Author')->get('id'));
         }
 
         if (!is_array($value)) {

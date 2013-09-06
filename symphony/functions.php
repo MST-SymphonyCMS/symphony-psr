@@ -222,6 +222,17 @@ function sortAlerts($a, $b) {
     return 1;
 }
 
+/**
+ * Used by the BlueprintsPagesPage to sort pages
+ * @param  [type] $a [description]
+ * @param  [type] $b [description]
+ * @return [type]    [description]
+ */
+function compare_pages($a, $b) {
+    return strnatcasecmp($a[2], $b[2]);
+}
+
+
 
 /**
  * The translation function accepts an English string and returns its translation

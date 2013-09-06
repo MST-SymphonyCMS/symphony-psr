@@ -111,7 +111,7 @@ class FieldSelect extends Field implements ExportableFieldInterface, ImportableF
 
     public function createTable()
     {
-        return Symphony::Database()->query(
+        return Symphony::get('Database')->query(
             "CREATE TABLE IF NOT EXISTS `tbl_entries_data_" . $this->get('id') . "` (
               `id` int(11) unsigned NOT null auto_increment,
               `entry_id` int(11) unsigned NOT null,
@@ -131,12 +131,12 @@ class FieldSelect extends Field implements ExportableFieldInterface, ImportableF
 
     public function fetchAssociatedEntryCount($value)
     {
-        return Symphony::Database()->fetchVar('count', 0, "SELECT count(*) AS `count` FROM `tbl_entries_data_".$this->get('id')."` WHERE `value` = '".Symphony::Database()->cleanValue($value)."'");
+        return Symphony::get('Database')->fetchVar('count', 0, "SELECT count(*) AS `count` FROM `tbl_entries_data_".$this->get('id')."` WHERE `value` = '".Symphony::get('Database')->cleanValue($value)."'");
     }
 
     public function fetchAssociatedEntryIDs($value)
     {
-        return Symphony::Database()->fetchCol('entry_id', "SELECT `entry_id` FROM `tbl_entries_data_".$this->get('id')."` WHERE `value` = '".Symphony::Database()->cleanValue($value)."'");
+        return Symphony::get('Database')->fetchCol('entry_id', "SELECT `entry_id` FROM `tbl_entries_data_".$this->get('id')."` WHERE `value` = '".Symphony::get('Database')->cleanValue($value)."'");
     }
 
     public function fetchAssociatedEntrySearchValue($data, $field_id = null, $parent_entry_id = null)
@@ -157,8 +157,8 @@ class FieldSelect extends Field implements ExportableFieldInterface, ImportableF
         $results = false;
 
         // Ensure that the table has a 'value' column
-        if ((boolean)Symphony::Database()->fetchVar('Field', 0, sprintf("SHOW COLUMNS FROM `tbl_entries_data_%d` LIKE '%s'", $this->get('dynamic_options'), 'value'))) {
-            $results = Symphony::Database()->fetchCol(
+        if ((boolean)Symphony::get('Database')->fetchVar('Field', 0, sprintf("SHOW COLUMNS FROM `tbl_entries_data_%d` LIKE '%s'", $this->get('dynamic_options'), 'value'))) {
+            $results = Symphony::get('Database')->fetchCol(
                 'value',
                 sprintf(
                     "SELECT DISTINCT `value`
@@ -170,8 +170,8 @@ class FieldSelect extends Field implements ExportableFieldInterface, ImportableF
         }
 
         // In the case of a Upload field, use 'file' instead of 'value'
-        if (($results == false) && (boolean)Symphony::Database()->fetchVar('Field', 0, sprintf("SHOW COLUMNS FROM `tbl_entries_data_%d` LIKE '%s'", $this->get('dynamic_options'), 'file'))) {
-            $results = Symphony::Database()->fetchCol(
+        if (($results == false) && (boolean)Symphony::get('Database')->fetchVar('Field', 0, sprintf("SHOW COLUMNS FROM `tbl_entries_data_%d` LIKE '%s'", $this->get('dynamic_options'), 'file'))) {
+            $results = Symphony::get('Database')->fetchCol(
                 'file',
                 sprintf(
                     "SELECT DISTINCT `file`

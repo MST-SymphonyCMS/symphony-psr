@@ -44,7 +44,7 @@ class LoginPage extends HTMLPage
 
         $this->Body->setAttribute('id', 'login');
 
-        Symphony::Profiler()->sample('Page template created', PROFILE_LAP);
+        Symphony::get('Profiler')->sample('Page template created', PROFILE_LAP);
     }
 
     public function build($context = null)
@@ -64,7 +64,7 @@ class LoginPage extends HTMLPage
     {
         if (isset($this->_context[0]) && in_array(strlen($this->_context[0]), array(6, 8))) {
             if (!$this->loginFromToken($this->_context[0])) {
-                if (Administration::instance()->isLoggedIn()) {
+                if (Symphony::get('Engine')->isLoggedIn()) {
                     redirect(SYMPHONY_URL);
                 }
             }
@@ -183,7 +183,7 @@ class LoginPage extends HTMLPage
 
             // Login Attempted
             if ($action == 'login') {
-                if (empty($_POST['username']) || empty($_POST['password']) || !Administration::instance()->login($_POST['username'], $_POST['password'])) {
+                if (empty($_POST['username']) || empty($_POST['password']) || !Symphony::get('Engine')->login($_POST['username'], $_POST['password'])) {
                     /**
                      * A failed login attempt into the Symphony backend
                      *
@@ -194,11 +194,11 @@ class LoginPage extends HTMLPage
                      * @param string $username
                      *  The username of the Author who attempted to login.
                      */
-                    Symphony::ExtensionManager()->notifyMembers(
+                    Symphony::get('ExtensionManager')->notifyMembers(
                         'AuthorLoginFailure',
                         '/login/',
                         array(
-                            'username' => Symphony::Database()->cleanValue($_POST['username'])
+                            'username' => Symphony::get('Database')->cleanValue($_POST['username'])
                         )
                     );
                     $this->failedLoginAttempt = true;
@@ -213,11 +213,11 @@ class LoginPage extends HTMLPage
                      * @param string $username
                      *  The username of the Author who logged in.
                      */
-                    Symphony::ExtensionManager()->notifyMembers(
+                    Symphony::get('ExtensionManager')->notifyMembers(
                         'AuthorLoginSuccess',
                         '/login/',
                         array(
-                            'username' => Symphony::Database()->cleanValue($_POST['username'])
+                            'username' => Symphony::get('Database')->cleanValue($_POST['username'])
                         )
                     );
 
@@ -226,19 +226,19 @@ class LoginPage extends HTMLPage
             } elseif ($action == 'reset') {
                 // Reset of password requested
 
-                $author = Symphony::Database()->fetchRow(0, sprintf("
+                $author = Symphony::get('Database')->fetchRow(0, sprintf("
                         SELECT `id`, `email`, `first_name`
                         FROM `tbl_authors`
                         WHERE `email` = '%1\$s' OR `username` = '%1\$s'
-                    ", Symphony::Database()->cleanValue($_POST['email'])
+                    ", Symphony::get('Database')->cleanValue($_POST['email'])
                 ));
 
                 if (!empty($author)) {
-                    Symphony::Database()->delete('tbl_forgotpass', " `expiry` < '".DateTimeObj::getGMT('c')."' ");
+                    Symphony::get('Database')->delete('tbl_forgotpass', " `expiry` < '".DateTimeObj::getGMT('c')."' ");
 
-                    if (!$token = Symphony::Database()->fetchVar('token', 0, "SELECT `token` FROM `tbl_forgotpass` WHERE `expiry` > '".DateTimeObj::getGMT('c')."' AND `author_id` = ".$author['id'])) {
+                    if (!$token = Symphony::get('Database')->fetchVar('token', 0, "SELECT `token` FROM `tbl_forgotpass` WHERE `expiry` > '".DateTimeObj::getGMT('c')."' AND `author_id` = ".$author['id'])) {
                         $token = substr(SHA1::hash(time() . rand(0, 1000)), 0, 6);
-                        Symphony::Database()->insert(
+                        Symphony::get('Database')->insert(
                             array(
                                 'author_id' => $author['id'],
                                 'token' => $token,
@@ -278,7 +278,7 @@ class LoginPage extends HTMLPage
                      * @param integer $author_id
                      *  The ID of the Author who requested the password reset
                      */
-                    Symphony::ExtensionManager()->notifyMembers(
+                    Symphony::get('ExtensionManager')->notifyMembers(
                         'AuthorPostPasswordResetSuccess',
                         '/login/',
                         array(
@@ -297,11 +297,11 @@ class LoginPage extends HTMLPage
                      * @param string $email
                      *  The sanitised Email of the Author who tried to request the password reset
                      */
-                    Symphony::ExtensionManager()->notifyMembers(
+                    Symphony::get('ExtensionManager')->notifyMembers(
                         'AuthorPostPasswordResetFailure',
                         '/login/',
                         array(
-                            'email' => Symphony::Database()->cleanValue($_POST['email'])
+                            'email' => Symphony::get('Database')->cleanValue($_POST['email'])
                         )
                     );
 
@@ -314,7 +314,7 @@ class LoginPage extends HTMLPage
     public function loginFromToken($token)
     {
         // If token is invalid, return to login page
-        if (!Administration::instance()->loginFromToken($token)) {
+        if (!Symphony::get('Engine')->loginFromToken($token)) {
             return false;
         }
 

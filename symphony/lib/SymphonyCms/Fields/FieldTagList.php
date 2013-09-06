@@ -57,7 +57,7 @@ class FieldTagList extends Field implements ExportableFieldInterface, Importable
 
     public function createTable()
     {
-        return Symphony::Database()->query(
+        return Symphony::get('Database')->query(
             "CREATE TABLE IF NOT EXISTS `tbl_entries_data_" . $this->get('id') . "` (
               `id` int(11) unsigned NOT null auto_increment,
               `entry_id` int(11) unsigned NOT null,
@@ -93,7 +93,7 @@ class FieldTagList extends Field implements ExportableFieldInterface, Importable
         $values = array();
 
         foreach ($this->get('pre_populate_source') as $item) {
-            $result = Symphony::Database()->fetchCol(
+            $result = Symphony::get('Database')->fetchCol(
                 'value',
                 sprintf(
                     "SELECT DISTINCT `value` FROM tbl_entries_data_%d ORDER BY `value` ASC",

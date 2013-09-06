@@ -92,9 +92,9 @@ class Entry
         $fields['creation_date_gmt'] = $fields['modification_date_gmt'] = DateTimeObj::getGMT('Y-m-d H:i:s');
         $fields['author_id'] = is_null($this->get('author_id')) ? '1' : $this->get('author_id'); // Author_id cannot be null
 
-        Symphony::Database()->insert($fields, 'tbl_entries');
+        Symphony::get('Database')->insert($fields, 'tbl_entries');
 
-        if (!$entry_id = Symphony::Database()->getInsertID()) {
+        if (!$entry_id = Symphony::get('Database')->getInsertID()) {
             return null;
         }
 
@@ -184,7 +184,7 @@ class Entry
 
         // Failed to create entry, cleanup
         if ($status != __ENTRY_OK__ and !is_null($entry_id)) {
-            Symphony::Database()->delete('tbl_entries', " `id` = '$entry_id' ");
+            Symphony::get('Database')->delete('tbl_entries', " `id` = '$entry_id' ");
         }
 
         return $status;

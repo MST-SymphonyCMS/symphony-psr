@@ -27,7 +27,7 @@ class BlueprintsSectionsPage extends AdministrationPage
     {
         $this->setPageType('table');
         $this->setTitle(tr('%1$s &ndash; %2$s', array(tr('Sections'), tr('Symphony'))));
-        $this->appendSubheading(tr('Sections'), Widget::Anchor(tr('Create New'), Administration::instance()->getCurrentPageURL().'new/', tr('Create a section'), 'create button', null, array('accesskey' => 'c')));
+        $this->appendSubheading(tr('Sections'), Widget::Anchor(tr('Create New'), Symphony::get('Engine')->getCurrentPageURL().'new/', tr('Create a section'), 'create button', null, array('accesskey' => 'c')));
 
         $sections = SectionManager::fetch(null, 'ASC', 'sortorder');
 
@@ -48,7 +48,7 @@ class BlueprintsSectionsPage extends AdministrationPage
                 $entry_count = EntryManager::fetchCount($s->get('id'));
 
                 // Setup each cell
-                $td1 = Widget::TableData(Widget::Anchor($s->get('name'), Administration::instance()->getCurrentPageURL() . 'edit/' . $s->get('id') .'/', null, 'content'));
+                $td1 = Widget::TableData(Widget::Anchor($s->get('name'), Symphony::get('Engine')->getCurrentPageURL() . 'edit/' . $s->get('id') .'/', null, 'content'));
                 $td2 = Widget::TableData(Widget::Anchor("$entry_count", SYMPHONY_URL . '/publish/' . $s->get('handle') . '/'));
                 $td3 = Widget::TableData($s->get('navigation_group'));
 
@@ -112,7 +112,7 @@ class BlueprintsSectionsPage extends AdministrationPage
          *  in the With Selected menu. Options should follow the same format
          *  expected by `Widget::selectBuildOption`. Passed by reference.
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'AddCustomActions',
             '/blueprints/sections/',
             array(
@@ -235,7 +235,7 @@ class BlueprintsSectionsPage extends AdministrationPage
          * @param array $errors
          *  The current errors array
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'AddSectionElements',
             '/blueprints/sections/',
             array(
@@ -313,7 +313,7 @@ class BlueprintsSectionsPage extends AdministrationPage
         $section_id = $this->_context[1];
 
         if (!$section = SectionManager::fetch($section_id)) {
-            Administration::instance()->throwCustomError(
+            Symphony::get('Engine')->throwCustomError(
                 tr('The Section, %s, could not be found.', array($section_id)),
                 tr('Unknown Section'),
                 Page::HTTP_STATUS_NOT_FOUND
@@ -464,7 +464,7 @@ class BlueprintsSectionsPage extends AdministrationPage
          * @param array $errors
          *  The current errors array
          */
-        Symphony::ExtensionManager()->notifyMembers(
+        Symphony::get('ExtensionManager')->notifyMembers(
             'AddSectionElements',
             '/blueprints/sections/',
             array(
@@ -555,7 +555,7 @@ class BlueprintsSectionsPage extends AdministrationPage
              *  An array of the selected rows. The value is usually the ID of the
              *  the associated object.
              */
-            Symphony::ExtensionManager()->notifyMembers(
+            Symphony::get('ExtensionManager')->notifyMembers(
                 'CustomActions',
                 '/blueprints/sections/',
                 array(
@@ -574,7 +574,7 @@ class BlueprintsSectionsPage extends AdministrationPage
                  * @param array $section_ids
                  *  An array of Section ID's passed by reference
                  */
-                Symphony::ExtensionManager()->notifyMembers('SectionPreDelete', '/blueprints/sections/', array('section_ids' => &$checked));
+                Symphony::get('ExtensionManager')->notifyMembers('SectionPreDelete', '/blueprints/sections/', array('section_ids' => &$checked));
 
                 foreach ($checked as $section_id) {
                     SectionManager::delete($section_id);
@@ -598,7 +598,7 @@ class BlueprintsSectionsPage extends AdministrationPage
                      * @param array $entry_id
                      *  An array of Entry ID's that are about to be deleted, passed by reference
                      */
-                    Symphony::ExtensionManager()->notifyMembers('Delete', '/publish/', array('entry_id' => &$entry_ids));
+                    Symphony::get('ExtensionManager')->notifyMembers('Delete', '/publish/', array('entry_id' => &$entry_ids));
 
                     EntryManager::delete($entry_ids, $section_id);
                 }
@@ -729,7 +729,7 @@ class BlueprintsSectionsPage extends AdministrationPage
                      *  section with the key being the position in the Section Editor
                      *  and the value being a Field object, passed by reference
                      */
-                    Symphony::ExtensionManager()->notifyMembers('SectionPreCreate', '/blueprints/sections/', array('meta' => &$meta, 'fields' => &$fields));
+                    Symphony::get('ExtensionManager')->notifyMembers('SectionPreCreate', '/blueprints/sections/', array('meta' => &$meta, 'fields' => &$fields));
 
                     if (!$section_id = SectionManager::add($meta)) {
                         $this->pageAlert(tr('An unknown database occurred while attempting to create the section.'), Alert::ERROR);
@@ -756,7 +756,7 @@ class BlueprintsSectionsPage extends AdministrationPage
                      *  section with the key being the position in the Section Editor
                      *  and the value being a Field object, passed by reference
                      */
-                    Symphony::ExtensionManager()->notifyMembers('SectionPreEdit', '/blueprints/sections/', array('section_id' => $section_id, 'meta' => &$meta, 'fields' => &$fields));
+                    Symphony::get('ExtensionManager')->notifyMembers('SectionPreEdit', '/blueprints/sections/', array('section_id' => $section_id, 'meta' => &$meta, 'fields' => &$fields));
 
                     if (!SectionManager::edit($section_id, $meta)) {
                         $canProceed = false;
@@ -777,7 +777,7 @@ class BlueprintsSectionsPage extends AdministrationPage
                             }
                         }
 
-                        $missing_cfs = Symphony::Database()->fetchCol('id', "SELECT `id` FROM `tbl_fields` WHERE `parent_section` = '$section_id' AND `id` NOT IN ('".@implode("', '", $id_list)."')");
+                        $missing_cfs = Symphony::get('Database')->fetchCol('id', "SELECT `id` FROM `tbl_fields` WHERE `parent_section` = '$section_id' AND `id` NOT IN ('".@implode("', '", $id_list)."')");
 
                         if (is_array($missing_cfs) && !empty($missing_cfs)) {
                             foreach ($missing_cfs as $id) {
@@ -812,7 +812,7 @@ class BlueprintsSectionsPage extends AdministrationPage
                                      * @param array $data
                                      *  The settings for ths `$field`, passed by reference
                                      */
-                                    Symphony::ExtensionManager()->notifyMembers('FieldPostCreate', '/blueprints/sections/', array('field' => &$field, 'data' => &$data));
+                                    Symphony::get('ExtensionManager')->notifyMembers('FieldPostCreate', '/blueprints/sections/', array('field' => &$field, 'data' => &$data));
                                 } else {
                                     /**
                                      * After editing of a Field.
@@ -825,7 +825,7 @@ class BlueprintsSectionsPage extends AdministrationPage
                                      * @param array $data
                                      *  The settings for ths `$field`, passed by reference
                                      */
-                                    Symphony::ExtensionManager()->notifyMembers('FieldPostEdit', '/blueprints/sections/', array('field' => &$field, 'data' => &$data));
+                                    Symphony::get('ExtensionManager')->notifyMembers('FieldPostEdit', '/blueprints/sections/', array('field' => &$field, 'data' => &$data));
                                 }
                             }
                         }
@@ -843,7 +843,7 @@ class BlueprintsSectionsPage extends AdministrationPage
                          * @param integer $section_id
                          *  The newly created Section ID.
                          */
-                        Symphony::ExtensionManager()->notifyMembers('SectionPostCreate', '/blueprints/sections/', array('section_id' => $section_id));
+                        Symphony::get('ExtensionManager')->notifyMembers('SectionPostCreate', '/blueprints/sections/', array('section_id' => $section_id));
 
                         redirect(SYMPHONY_URL . "/blueprints/sections/edit/$section_id/created/");
                     } else {
@@ -858,7 +858,7 @@ class BlueprintsSectionsPage extends AdministrationPage
                          * @param integer $section_id
                          *  The edited Section ID.
                          */
-                        Symphony::ExtensionManager()->notifyMembers('SectionPostEdit', '/blueprints/sections/', array('section_id' => $section_id));
+                        Symphony::get('ExtensionManager')->notifyMembers('SectionPostEdit', '/blueprints/sections/', array('section_id' => $section_id));
 
                         redirect(SYMPHONY_URL . "/blueprints/sections/edit/$section_id/saved/");
 
@@ -880,7 +880,7 @@ class BlueprintsSectionsPage extends AdministrationPage
              * @param array $section_ids
              *  An array of Section ID's passed by reference
              */
-            Symphony::ExtensionManager()->notifyMembers('SectionPreDelete', '/blueprints/sections/', array('section_ids' => &$section_id));
+            Symphony::get('ExtensionManager')->notifyMembers('SectionPreDelete', '/blueprints/sections/', array('section_ids' => &$section_id));
 
             foreach ($section_id as $section) {
                 SectionManager::delete($section);

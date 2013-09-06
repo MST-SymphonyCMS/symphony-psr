@@ -109,9 +109,9 @@ class EntryManager
     {
         $fields = $entry->get();
 
-        Symphony::Database()->insert($fields, 'tbl_entries');
+        Symphony::get('Database')->insert($fields, 'tbl_entries');
 
-        if (!$entry_id = Symphony::Database()->getInsertID()) {
+        if (!$entry_id = Symphony::get('Database')->getInsertID()) {
             return false;
         }
 
@@ -120,7 +120,7 @@ class EntryManager
                 continue;
             }
 
-            Symphony::Database()->delete('tbl_entries_data_' . $field_id, " `entry_id` = '$entry_id'");
+            Symphony::get('Database')->delete('tbl_entries_data_' . $field_id, " `entry_id` = '$entry_id'");
 
             $data = array(
                 'entry_id' => $entry_id
@@ -142,7 +142,7 @@ class EntryManager
                 $fields[$ii] = array_merge($data, $fields[$ii]);
             }
 
-            Symphony::Database()->insert($fields, 'tbl_entries_data_' . $field_id);
+            Symphony::get('Database')->insert($fields, 'tbl_entries_data_' . $field_id);
 
         }
 
@@ -161,7 +161,7 @@ class EntryManager
     public static function edit(Entry $entry)
     {
         // Update modification date.
-        Symphony::Database()->update(
+        Symphony::get('Database')->update(
             array(
                 'modification_date' => $entry->get('modification_date'),
                 'modification_date_gmt' => $entry->get('modification_date_gmt')
@@ -178,7 +178,7 @@ class EntryManager
             }
 
             try {
-                Symphony::Database()->delete('tbl_entries_data_' . $field_id, sprintf(' `entry_id` = %d', $entry->get('id')));
+                Symphony::get('Database')->delete('tbl_entries_data_' . $field_id, sprintf(' `entry_id` = %d', $entry->get('id')));
             } catch (\Exception $e) {
                 // Discard?
             }
@@ -208,7 +208,7 @@ class EntryManager
                 $fields[$index] = array_merge($data, $field_data);
             }
 
-            Symphony::Database()->insert($fields, 'tbl_entries_data_' . $field_id);
+            Symphony::get('Database')->insert($fields, 'tbl_entries_data_' . $field_id);
         }
 
         return true;
@@ -310,7 +310,7 @@ class EntryManager
                 }
             }
 
-            Symphony::Database()->delete('tbl_entries', " `id` IN ('$entry_list') ");
+            Symphony::get('Database')->delete('tbl_entries', " `id` IN ('$entry_list') ");
         }
 
         return true;
@@ -421,7 +421,7 @@ class EntryManager
             $sort
             ".($limit ? 'LIMIT ' . intval($start) . ', ' . intval($limit) : '');
 
-        $rows = Symphony::Database()->fetch($sql);
+        $rows = Symphony::get('Database')->fetch($sql);
 
         return ($buildentries && (is_array($rows) && !empty($rows)) ? self::buildEntries($rows, $section_id, $element_names) : $rows);
     }
@@ -475,7 +475,7 @@ class EntryManager
             foreach ($schema as $field_id) {
 
                 try {
-                    $row = Symphony::Database()->fetch("SELECT * FROM `tbl_entries_data_{$field_id}` WHERE `entry_id` IN ($rows_string) ORDER BY `id` ASC");
+                    $row = Symphony::get('Database')->fetch("SELECT * FROM `tbl_entries_data_{$field_id}` WHERE `entry_id` IN ($rows_string) ORDER BY `id` ASC");
                 } catch (Exception $e) {
                     // No data due to error
                     continue;
@@ -563,7 +563,7 @@ class EntryManager
      */
     public static function fetchEntrySectionID($entry_id)
     {
-        return Symphony::Database()->fetchVar('section_id', 0, "SELECT `section_id` FROM `tbl_entries` WHERE `id` = '$entry_id' LIMIT 1");
+        return Symphony::get('Database')->fetchVar('section_id', 0, "SELECT `section_id` FROM `tbl_entries` WHERE `id` = '$entry_id' LIMIT 1");
     }
 
     /**
@@ -591,7 +591,7 @@ class EntryManager
             return false;
         }
 
-        return Symphony::Database()->fetchVar(
+        return Symphony::get('Database')->fetchVar(
             'count',
             0,
             "SELECT count(".($group ? 'DISTINCT ' : '')."`e`.id) as `count`
